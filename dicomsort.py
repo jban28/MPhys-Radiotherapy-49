@@ -516,4 +516,5 @@ if __name__ == '__main__':
 # }}}
 
 # vim:set sr et ts=4 sw=4 ft=python fenc=utf-8: // See Vim, :help 'modeline
-# vim: foldmethod=marker
+# vim: foldmethod=marker 
+# checking if the github push works
