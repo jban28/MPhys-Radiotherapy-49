@@ -5,7 +5,8 @@ import os
 from scipy import stats
 
 # root = sys.argv[1]
-root = "/mnt/c/Users/James/Documents/MPhys-Project/Sorted-data"
+# root = "/mnt/c/Users/James/Documents/MPhys-Project/Sorted-data"
+root = "/mnt/c/Users/annaw/Documents/MPhys_Project/Sorted_data2"
 
 def CT_list(root_file):
   # find list of all directories which are 3D CTs
@@ -32,7 +33,8 @@ def view_image(image):
   #return data_2d
   plt.imshow(data_2d)
   plt.show()
-  plt.savefig("/mnt/c/Users/James/Documents/MPhys-Project/test.png")
+  # plt.savefig("/mnt/c/Users/James/Documents/MPhys-Project/test.png")
+  plt.savefig("/mnt/c/Users/annaw/Documents/MPhys_Project/test.png")
 
 def resample_volume(volume, interpolator = sitk.sitkLinear):
   new_size = [512, 512, 256]
@@ -46,7 +48,7 @@ def resample_volume(volume, interpolator = sitk.sitkLinear):
 
   return resample.Execute(volume)
 
-def WL_norm(img, window=1000, level=300):
+def WL_norm(img, window=40, level=80):
   """
   Apply window and level to image
   """
@@ -75,5 +77,6 @@ for filename in CT_folders:
   break
 
 
-
-
+mask_3d = rtstruct.get_roi_mask_by_name(root + "/" + "HN-CHUM-003-RTSTRUCT-PANC__avec_C_A___PRIMAIRE_-TP-18850827-111111/" + "1_RTstruct_CTsim-_CT_PET-CT_-UnknownInstanceNumber" )
+plt.imshow(mask_3d)
+plt.show()
