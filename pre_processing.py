@@ -1,9 +1,11 @@
-# %% 
-
 import SimpleITK as sitk
 import matplotlib.pyplot as plt
 import sys
 import os
+from scipy import stats
+
+# root = sys.argv[1]
+root = "/mnt/c/Users/James/Documents/MPhys-Project/Sorted-data"
 
 def CT_list(root_file):
   # find list of all directories which are 3D CTs
@@ -12,17 +14,19 @@ def CT_list(root_file):
   for folder in all_folders:
     folder_path = root_file+"/"+folder
     if (len(os.listdir(folder_path)) > 2) and ("PT" not in folder_path) and ("PET" not in folder_path) and ("TEP" not in folder_path):
-      CT_folders.append(folder)
+      CT_folders.append(root_file+"/"+folder)
   return CT_folders
 
 def find_image_size(source):
+  # Finds the dimensions of a single CT
   reader = sitk.ImageSeriesReader()
   dicom_names = reader.GetGDCMSeriesFileNames(source)
   reader.SetFileNames(dicom_names)
   image = reader.Execute()
-  print(image.GetSize())
+  return image.GetSize()
 
 def view_image(image):
+  # Saves a png of a single Dicom
   data = sitk.ReadImage(image)
   data_2d = sitk.GetArrayViewFromImage(data)[0,:,:]
   #return data_2d
@@ -30,18 +34,46 @@ def view_image(image):
   plt.show()
   plt.savefig("/mnt/c/Users/James/Documents/MPhys-Project/test.png")
 
-"""
-# CT_folders = CT_list(sys.argv[1])
-CT_folders = [sys.argv[1]]
+def resample_volume(volume, interpolator = sitk.sitkLinear):
+  new_size = [512, 512, 256]
+  resample = sitk.ResampleImageFilter()
+  resample.SetInterpolator(interpolator)
+  resample.SetOutputDirection(volume.GetDirection())
+  resample.SetOutputOrigin(volume.GetOrigin())
+  resample.SetSize(new_size)
+  resample.SetOutputSpacing([1, 1, 3])
+  resample.SetDefaultPixelValue(-1024)
 
-# finds sizes of each CT image
-for folder in CT_folders:
-  folder_path = folder
-  find_image_size(folder_path)
-"""
+  return resample.Execute(volume)
 
-# plt.imshow(view_image(sys.argv[1]))
-# plt.show()
+def WL_norm(img, window=1000, level=300):
+  """
+  Apply window and level to image
+  """
 
-view_image(sys.argv[1])
-# %%
+  maxval = level + window/2
+  minval = level - window/2
+  wl = sitk.IntensityWindowingImageFilter()
+  wl.SetWindowMaximum(maxval)
+  wl.SetWindowMinimum(minval)
+  out = wl.Execute(img)
+  return out
+
+CT_folders = CT_list(root)
+
+# image_size = find_image_size(CT_folders[0])
+# print(image_size)
+
+for filename in CT_folders:
+  reader = sitk.ImageSeriesReader()
+  dcm_paths = reader.GetGDCMSeriesFileNames(filename)  
+  reader.SetFileNames(dcm_paths)
+  volume = sitk.ReadImage(dcm_paths)
+  x = resample_volume(volume)
+  x = WL_norm(x)
+  sitk.WriteImage(x, f"{root}/test.nii")
+  break
+
+
+
+
