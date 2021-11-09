@@ -40,10 +40,11 @@ def get_mask(contours, slices):
         colors = tuple(np.array([con['color'] for con in contours]) / 255.0)
     return label, colors
 
-train_data_path = "/mnt/c/Users/annaw/Documents/MPhys_Project/Sorted_data2/HN-CHUM-003-RTSTRUCT-PANC__avec_C_A___PRIMAIRE_-TP-18850827-111111"
+train_data_path = "/C:/Users/annaw/Documents/MPhys_Project/Sorted_data2/HN-CHUM-007-RTSTRUCT-CT_pour_planification_-ONCO-18850827-111111"
 
 train_patients = [os.path.join(train_data_path, name) 
                     for name in os.listdir(train_data_path) if os.path.isdir(os.path.join(train_data_path, name))]
+print(train_patients)
 patient = train_patients[0] ##sample patient
 #print(patient)
 
@@ -67,6 +68,6 @@ for dirs, subdir, files in os.walk(patient):
 plt.figure(figsize=(15, 15))
 for i in range(9):
     plt.subplot(3, 3, i + 1)
-    plt.imshow(image[..., i + 50], cmap="gray")
-    plt.contour(label[..., i + 50], levels=[0.5, 1.5, 2.5, 3.5, 4.5], colors=colors)
+    plt.imshow(image[i:i + 1], cmap="gray")
+    plt.contour(label[i: i + 1], levels=[0.5, 1.5, 2.5, 3.5, 4.5], colors=colors)
 plt.axis('off')
