@@ -31,9 +31,11 @@ mask_3d_bin = mask_3d.astype(float)
 print(mask_3d_bin.dtype)
 img = sitk.GetImageFromArray(mask_3d_bin)
 print(img.GetSize())
+print('Pixel ID Value is ')
+print(img.GetSpacing())
 
-
-
+# img is the original mask
+# volume is the original CT image
 def resample_volume(volume, direction, origin, interpolator = sitk.sitkLinear, value=-1024):
   new_size = [512, 512, 512]
   resample = sitk.ResampleImageFilter()
@@ -53,6 +55,7 @@ dcm_paths = reader.GetGDCMSeriesFileNames('/mnt/c/Users/annaw/Documents/MPhys_Pr
 reader.SetFileNames(dcm_paths)
 volume = reader.Execute()
 
+#RESAMPLED CT   x is resampled CT image
 x = resample_volume(volume, volume.GetDirection(), volume.GetOrigin()) #mask
 #print("THis is x")
 #print(x)
@@ -60,7 +63,7 @@ sitk.WriteImage(x, f"./test.nii")
 #print("IMAGE IS...............")
 #print(img)
 
-
+# RESAMPLED MASK     image is resampled mask
 image = resample_volume(img, volume.GetDirection(), volume.GetOrigin(), interpolator=sitk.sitkNearestNeighbor, value=0)
 sitk.WriteImage(image, f"./test_mask.nii")
 #print(type(img))
@@ -68,6 +71,7 @@ sitk.WriteImage(image, f"./test_mask.nii")
 # Display one slice of the region
 first_mask_slice = sitk.GetArrayFromImage(image)[:, :, 40]
 plt.imshow(first_mask_slice)
-plt.show()
 # plt.savefig("/mnt/c/Users/James/Documents/MPhys-Project/testRT.png")
 plt.savefig("testRT.png")
+
+
