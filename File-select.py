@@ -1,32 +1,33 @@
 import os
 import pydicom
 
-project_folder = "/mnt/c/Users/James/Documents/MPhys-Project/"
+# Creates a blank array which will be used to organise image file paths in the format [StudyUID, CT path, RTStruct Path]
 images = []
-# chum_list = []
-# chus_list = []
-# hgj_list = []
-# hmr_list = []
 
-path_list = os.listdir(project_folder+"Sorted_data")
+root = "/mnt/c/Users/James/Documents/MPhys-Project/"
+path_list = os.listdir(root+"Sorted_data")
+path_list = path_list[:100]
 
 for path in path_list:
-  dicom = pydicom.dcmread(project_folder+"Sorted_data/"+path+"/"+os.listdir(project_folder+"Sorted_data/"+path)[0])
-  print(dicom.Modality)
-  if (dicom.Modality != "CT") and (dicom.Modality != "RTSTRUCT"):
-     path_list.remove(path)
+  # Extract the first dicom file from each directory in the data folder
+  filename = os.listdir(root+"Sorted_data/"+path)[0]
+  dicom = pydicom.dcmread(root+"Sorted_data/"+path+"/"+filename)
+  
+  # Checks if the dicom is a CT or RTStruct, then adds those to the images array
+  if (dicom.Modality == "CT") or (dicom.Modality == "RTSTRUCT"):
+    if dicom.StudyInstanceUID not in [i[0] for i in images] and dicom.Modality == "CT":
+      images.append([dicom.StudyInstanceUID, path])
+    elif dicom.StudyInstanceUID not in [i[0] for i in images] and dicom.Modality == "RTSTRUCT":
+      images.append([dicom.StudyInstanceUID, path+"/"+filename])
+    elif dicom.StudyInstanceUID in [i[0] for i in images] and dicom.Modality == "CT":
+      index = [i[0] for i in images].index(dicom.StudyInstanceUID)
+      images[index].insert(1,path+"/"+filename)
+    elif dicom.StudyInstanceUID in [i[0] for i in images] and dicom.Modality == "RTSTRUCT":
+      index = [i[0] for i in images].index(dicom.StudyInstanceUID)
+      images[index].append(path+"/"+filename)
+    else:
+      print("Error at Study "+dicom.StudyInstanceUID)
 
-print(path_list)
 
-# for file in paths:
-#   if file[:7] == "HN-CHUM":
-#     chum_list.append(file)
-#   elif file[:7] == "HN-CHUS":
-#     chus_list.append(file)
-#   elif file[:6] == "HN-HGJ":
-#     hgj_list.append(file)
-#   elif file[:6] == "HN-HMR":
-#     hmr_list.append(file)
-
-# for chum in chum_list:
+print(images)
 
