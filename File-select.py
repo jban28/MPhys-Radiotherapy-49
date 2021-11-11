@@ -13,8 +13,8 @@ path_list = os.listdir(project_folder+"Sorted_data")
 for path in path_list:
   dicom = pydicom.dcmread(project_folder+"Sorted_data/"+path+"/"+os.listdir(project_folder+"Sorted_data/"+path)[0])
   print(dicom.Modality)
-  # if (dicom.Modality() != "CT") and (dicom.Modality() != "RTSTRUCT"):
-  #   path_list.remove(path)
+  if (dicom.Modality != "CT") and (dicom.Modality != "RTSTRUCT"):
+     path_list.remove(path)
 
 print(path_list)
 
