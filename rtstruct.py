@@ -8,7 +8,7 @@ import SimpleITK as sitk
 # mask_in is the original mask
 # mask_out is resampled mask
 
-def resample_volume(volume, spacing, direction, origin, interpolator = sitk.sitkLinear, value=-1024):
+def resample_volume(volume, spacing, interpolator = sitk.sitkLinear, value=-1024):
   new_size = [512, 512, 512]
   resample = sitk.ResampleImageFilter()
   resample.SetInterpolator(interpolator)
@@ -27,7 +27,8 @@ def full_resample(root, rtstruct):
   mask_3d = rtstruct.get_roi_mask_by_name("GTV")
 
   # Converting array to sitk
-  mask_3d_bin = mask_3d.astype(float)
+  # mask_3d_bin = mask_3d.astype(float)
+  mask_3d_bin = mask_3d.astype(np.float32)
   mask_3d_bin = np.rot90(mask_3d_bin, 1, (0,2))
   mask_in = sitk.GetImageFromArray(mask_3d_bin)
 
@@ -37,10 +38,15 @@ def full_resample(root, rtstruct):
   reader.SetFileNames(dcm_paths)
   image_in = reader.Execute()
     
-  image_out = resample_volume(image_in, [1,1,1], image_in.GetDirection(), image_in.GetOrigin()) #mask
+  image_out = resample_volume(image_in, [1,1,1]) #mask
 
-  voxel_spacing = [(1/image_in.GetSpacing()[0]), (1/image_in.GetSpacing()[1]), (1/image_in.GetSpacing()[2])]
-  mask_out = resample_volume(mask_in, voxel_spacing ,image_in.GetDirection(), image_in.GetOrigin(), interpolator=sitk.sitkNearestNeighbor, value=0)
+  # voxel_spacing = [(1/image_in.GetSpacing()[0]), (1/image_in.GetSpacing()[1]), (1/image_in.GetSpacing()[2])]
+  print(mask_in.GetDirection(), mask_in.GetOrigin(), mask_in.GetSpacing())
+  mask_in.SetDirection(image_out.GetDirection())
+  mask_in.SetOrigin(image_out.GetOrigin())
+  mask_in.SetSpacing(image_in.GetSpacing())
+  print(mask_in.GetDirection(), mask_in.GetOrigin(), mask_in.GetSpacing())
+  mask_out = resample_volume(mask_in, [1,1,1], interpolator=sitk.sitkNearestNeighbor, value=0)
 
   # Saves images and masks as nii
   sitk.WriteImage(image_out, root + "test.nii")
@@ -66,7 +72,7 @@ path_list = [["HN-CHUM-003-CT-PANC__avec_C_A___PRIMAIRE_-TP-18850827-111111","HN
 
 
 # Load existing RT Struct. Requires the series path and existing RT Struct path
-patient_number = 1
+patient_number = 0
 image_builder = RTStructBuilder.create_from(
   dicom_series_path = project_folder + "Sorted_data/" + path_list[patient_number][0],
   rt_struct_path = project_folder + "Sorted_data/"+ path_list[patient_number][1]
