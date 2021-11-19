@@ -1,3 +1,4 @@
+from matplotlib import image
 from rt_utils import RTStructBuilder
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,7 +16,7 @@ def find_image_paths(root):
   images = []
 
   path_list = os.listdir(root+"Sorted_data")
-  path_list = path_list[18:32]
+  path_list = path_list[0:9]
 
   for path in path_list:
     # Extract the first dicom file from each directory in the data folder
@@ -40,44 +41,49 @@ def find_image_paths(root):
   return(images)
 
 
-def resample_volume(volume, spacing, interpolator = sitk.sitkLinear, value=-1024):
+def resample_volume(volume, direction, origin, spacing, interpolator = sitk.sitkLinear, value=-1024):
   new_size = [512, 512, 512]
   resample = sitk.ResampleImageFilter()
   resample.SetInterpolator(interpolator)
-  resample.SetOutputDirection(volume.GetDirection())
-  resample.SetOutputOrigin(volume.GetOrigin())
+  resample.SetOutputDirection(direction)
+  resample.SetOutputOrigin(origin)
   resample.SetSize(new_size)
   resample.SetOutputSpacing(spacing)
   resample.SetDefaultPixelValue(value)
   return resample.Execute(volume)
 
+def permute_axes(volume, permutation_order) :
+  # This function permutes the axes of the input volume.
+  # It will be used on the mask because SimpleITK seems to flip the axes
+  # at some stage in this process.
+
+  permute = sitk.PermuteAxesImageFilter()
+  permute.SetOrder(permutation_order)
+  return permute.Execute(volume)
+
 def full_resample(root, rtstruct, study_paths):
-  # View all of the ROI names from within the image
-  # print(rtstruct.get_roi_names())
 
   # Loading the 3D Mask from within the RT Struct
   mask_3d = rtstruct.get_roi_mask_by_name("GTV")
-
   # Converting array to sitk
-  # mask_3d_bin = mask_3d.astype(float)
   mask_3d_bin = mask_3d.astype(np.float32)
   mask_in = sitk.GetImageFromArray(mask_3d_bin)
+  mask_in = permute_axes(mask_in, [1,2,0])
+
+  
 
   # Reads in image to SimpleITK
   reader = sitk.ImageSeriesReader()
   dcm_paths = reader.GetGDCMSeriesFileNames(root + "Sorted_data/"+study_paths[1])
   reader.SetFileNames(dcm_paths)
-  image_in = reader.Execute()
-    
-  image_out = resample_volume(image_in, [1,1,1]) #mask
+  image_in = reader.Execute()  
+  image_out = resample_volume(image_in, image_in.GetDirection(), image_in.GetOrigin(), [1,1,1])
 
-  # voxel_spacing = [(1/image_in.GetSpacing()[0]), (1/image_in.GetSpacing()[1]), (1/image_in.GetSpacing()[2])]
-  # print(mask_in.GetDirection(), mask_in.GetOrigin(), mask_in.GetSpacing())
-  mask_in.SetDirection(image_out.GetDirection())
-  mask_in.SetOrigin(image_out.GetOrigin())
   mask_in.SetSpacing(image_in.GetSpacing())
-  # print(mask_in.GetDirection(), mask_in.GetOrigin(), mask_in.GetSpacing())
-  mask_out = resample_volume(mask_in, [1,1,1], interpolator=sitk.sitkNearestNeighbor, value=0)
+  mask_in.SetDirection(image_in.GetDirection())
+  mask_in.SetOrigin(image_in.GetOrigin())
+  
+  mask_out = resample_volume(mask_in, mask_in.GetDirection(), mask_in.GetOrigin(), image_in.GetSpacing(), interpolator=sitk.sitkNearestNeighbor, value=0)
 
   # Creates new path for study
   output_path = root+"Nifti/"+study_paths[0]
@@ -87,8 +93,8 @@ def full_resample(root, rtstruct, study_paths):
   # Saves images and masks as nii
   sitk.WriteImage(image_out, output_path + "/" + "image.nii")
   sitk.WriteImage(mask_out, output_path + "/" + "mask.nii")
-  # sitk.WriteImage(image_in, root + "CToriginal.nii")
-  # sitk.WriteImage(mask_in, root + "maskOG.nii")
+  sitk.WriteImage(image_in, output_path + "/CToriginal.nii")
+  sitk.WriteImage(mask_in, output_path + "/maskOG.nii")
 
   # Plots overlay of mask on image for one slice
   arrayRM = sitk.GetArrayFromImage(mask_out)[280, :, :]

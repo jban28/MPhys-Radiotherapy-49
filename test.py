@@ -1,6 +1,8 @@
-from rt_utils import RTStructBuilder
-image_builder = RTStructBuilder.create_from(
-  dicom_series_path = "test 1",
-  rt_struct_path = "test 2"
-)
-print(image_builder.dicom_series_path)
+array = [
+  [[1,2,3],[4,5,6],[7,8,9]],
+  [["a","b","c"],["d","e","f"],["g","h","i"]],
+  [[1,2,3],[4,5,6],[7,8,9]]
+  ]
+
+array = array[0:2][0:2][0:2]
+print(array)
