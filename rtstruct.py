@@ -90,6 +90,9 @@ def full_resample(root, rtstruct, study_paths):
   if not os.path.exists(output_path):
     os.makedirs(output_path)
   
+  print(mask_out.GetOrigin(), mask_out.GetDirection())
+  print(image_out.GetOrigin(), image_out.GetDirection())
+
   # Saves images and masks as nii
   sitk.WriteImage(image_out, output_path + "/" + "image.nii")
   sitk.WriteImage(mask_out, output_path + "/" + "mask.nii")
@@ -106,8 +109,8 @@ def full_resample(root, rtstruct, study_paths):
 
 
 
-#project_folder = "/mnt/c/Users/James/Documents/MPhys-Project/"
-project_folder = "/mnt/c/Users/annaw/Documents/MPhys_Project/"
+project_folder = "/mnt/c/Users/James/Documents/MPhys-Project/"
+#project_folder = "/mnt/c/Users/annaw/Documents/MPhys_Project/"
 
 failed_resamples = []
 

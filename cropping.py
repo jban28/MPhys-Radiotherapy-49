@@ -13,14 +13,11 @@ def permute_axes(volume, permutation_order) :
 
 def cube_crop(folder, image_path, mask_path, CoM, cube_size):
   print("cropping")
-  image = sitk.ReadImage(image_path)
-  mask = sitk.ReadImage(mask_path)
-  mask.SetSpacing(image.GetSpacing())
-  mask.SetDirection(image.GetDirection())
-  mask.SetOrigin(image.GetOrigin())
-  mask = permute_axes(mask, [1,2,0])
-  image_array = sitk.GetArrayFromImage(image)
-  mask_array = sitk.GetArrayFromImage(mask)
+  image1 = sitk.ReadImage(image_path)
+  mask1 = sitk.ReadImage(mask_path)
+
+  image_array = sitk.GetArrayFromImage(image1)
+  mask_array = sitk.GetArrayFromImage(mask1)
   # print("THIS IS CUBE SIZE")
   # print(cube_size)
   # min_ = [int(CoM[0]-cube_size), int(CoM[1]-cube_size), int(CoM[2]-cube_size)]
@@ -32,16 +29,26 @@ def cube_crop(folder, image_path, mask_path, CoM, cube_size):
   image = sitk.GetImageFromArray(image_array)
   mask = sitk.GetImageFromArray(mask_array)
 
+
+  # mask.SetSpacing(mask.GetSpacing())
+  mask.SetDirection(mask1.GetDirection())
+  mask.SetOrigin(mask1.GetOrigin())
+  image.SetDirection(image1.GetDirection())
+  image.SetOrigin(image1.GetOrigin())
+
   output_path = project_folder + "Nifti_crop/" + folder
   if not os.path.exists(output_path):
     os.makedirs(output_path)
+
+  print(mask.GetOrigin(), mask.GetDirection(), mask.GetSpacing())
+  print(image.GetOrigin(), image.GetDirection(), image.GetSpacing())
 
   sitk.WriteImage(image, output_path + "/image_crop.nii")
   sitk.WriteImage(mask, output_path + "/mask_crop.nii")
   
 
-#project_folder = "/mnt/c/Users/James/Documents/MPhys-Project/"
-project_folder = "/mnt/c/Users/annaw/Documents/MPhys_Project/"
+project_folder = "/mnt/c/Users/James/Documents/MPhys-Project/"
+#project_folder = "/mnt/c/Users/annaw/Documents/MPhys_Project/"
 
 image_folders = os.listdir(project_folder + "Nifti/")
 
@@ -53,13 +60,11 @@ for folder in image_folders:
   mask_path = project_folder + "Nifti/" + folder + "/mask.nii"
   image_path = project_folder + "Nifti/" + folder + "/image.nii"
 
-  # read in mask as array, and remove trvial 4th dimension (SimpleITK effectively reads a 3d nii as a single 4d slice)
+  # read in mask as array
   mask = sitk.ReadImage(mask_path)
   image = sitk.ReadImage(image_path)
-  mask.SetSpacing(image.GetSpacing())
-  mask.SetDirection(image.GetDirection())
-  mask.SetOrigin(image.GetOrigin())
-  mask = permute_axes(mask, [1,2,0])
+  
+
   mask_array = sitk.GetArrayFromImage(mask)
   # find location of all non zero points in mask, and find average position in x, y, and z, which is CoM
   non_zeros = np.argwhere(mask_array)
