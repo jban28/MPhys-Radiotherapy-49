@@ -2,6 +2,7 @@ import os
 import numpy as np
 import SimpleITK as sitk
 
+<<<<<<< HEAD
 def cube_crop(folder, image_path, mask_path, CoM, cube_size):
   print("cropping")
   image = sitk.ReadImage(image_path)
@@ -25,22 +26,41 @@ def cube_crop(folder, image_path, mask_path, CoM, cube_size):
   sitk.WriteImage(mask, output_path + "/mask_crop.nii")
   
 
+=======
+>>>>>>> e004e2c1b649c4e8e8c11472692d2124703fc5d1
 project_folder = "/mnt/c/Users/James/Documents/MPhys-Project/"
 # project_folder "/mnt/C:/Users/annaw/Documents/MPhys_Project/"
 
 image_folders = os.listdir(project_folder + "Nifti/")
 
+<<<<<<< HEAD
 image_list = []
+=======
+mask_list = []
+>>>>>>> e004e2c1b649c4e8e8c11472692d2124703fc5d1
 
 max_distance = 0
 
 for folder in image_folders:
   mask_path = project_folder + "Nifti/" + folder + "/mask.nii"
+<<<<<<< HEAD
   image_path = project_folder + "Nifti/" + folder + "/image.nii"
 
   # read in mask as array, and remove trvial 4th dimension (SimpleITK effectively reads a 3d nii as a single 4d slice)
   mask = sitk.ReadImage(mask_path)
   mask_array = sitk.GetArrayFromImage(mask)
+=======
+  mask_list.append([mask_path])
+
+n=0
+
+for mask_path in mask_list:
+  # read in mask as array, and remove trvial 4th dimension (SimpleITK effectively reads a 3d nii as a single 4d slice)
+  mask = sitk.ReadImage(mask_path)
+  mask_array = sitk.GetArrayFromImage(mask)
+  mask_array = mask_array[0]
+
+>>>>>>> e004e2c1b649c4e8e8c11472692d2124703fc5d1
   # find location of all non zero points in mask, and find average position in x, y, and z, which is CoM
   non_zeros = np.argwhere(mask_array)
   CoM_x = np.average(non_zeros[:,0])
@@ -55,7 +75,14 @@ for folder in image_folders:
       max_distance = max(displacement)
 
   # Add CoM to list of masks
+<<<<<<< HEAD
   image_list.append([folder, image_path, mask_path, CoM])
 
 i = 0
 cube_crop(image_list[i][0], image_list[i][1], image_list[i][2], image_list[i][3], int(max_distance+15))
+=======
+  mask_list[n].append(CoM)
+  n = n + 1
+
+print(max_distance)
+>>>>>>> e004e2c1b649c4e8e8c11472692d2124703fc5d1

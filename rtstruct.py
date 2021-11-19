@@ -16,7 +16,11 @@ def find_image_paths(root):
   images = []
 
   path_list = os.listdir(root+"Sorted_data")
+<<<<<<< HEAD
   path_list = path_list[0:9]
+=======
+  path_list = path_list[0:90]
+>>>>>>> e004e2c1b649c4e8e8c11472692d2124703fc5d1
 
   for path in path_list:
     # Extract the first dicom file from each directory in the data folder
