@@ -13,38 +13,35 @@ def permute_axes(volume, permutation_order) :
 
 def cube_crop(folder, image_path, mask_path, CoM, cube_size):
   print("cropping")
-  image1 = sitk.ReadImage(image_path)
-  mask1 = sitk.ReadImage(mask_path)
+  image_in = sitk.ReadImage(image_path)
+  mask_in = sitk.ReadImage(mask_path)
 
-  image_array = sitk.GetArrayFromImage(image1)
-  mask_array = sitk.GetArrayFromImage(mask1)
-  # print("THIS IS CUBE SIZE")
-  # print(cube_size)
-  # min_ = [int(CoM[0]-cube_size), int(CoM[1]-cube_size), int(CoM[2]-cube_size)]
-  # max_ = [int(CoM[0]+cube_size), int(CoM[1]+cube_size), int(CoM[2]+cube_size)]
+  image_array = sitk.GetArrayFromImage(image_in)
+  mask_array = sitk.GetArrayFromImage(mask_in)
+
+  min_ = [int(CoM[0]-cube_size), int(CoM[1]-cube_size), int(CoM[2]-cube_size)]
+  max_ = [int(CoM[0]+cube_size), int(CoM[1]+cube_size), int(CoM[2]+cube_size)]
   
-  # image_array = image_array[min_[0]:max_[0],min_[1]:max_[1],min_[2]:max_[2]]
-  # mask_array = mask_array[min_[0]:max_[0],min_[1]:max_[1],min_[2]:max_[2]]
+  image_array = image_array[min_[0]:max_[0],min_[1]:max_[1],min_[2]:max_[2]]
+  mask_array = mask_array[min_[0]:max_[0],min_[1]:max_[1],min_[2]:max_[2]]
   
-  image = sitk.GetImageFromArray(image_array)
-  mask = sitk.GetImageFromArray(mask_array)
+  image_out = sitk.GetImageFromArray(image_array)
+  mask_out = sitk.GetImageFromArray(mask_array)
 
+  mask_out.SetDirection(mask_in.GetDirection())
+  mask_out.SetOrigin(mask_in.GetOrigin())
+  mask_out.SetSpacing(mask_in.GetSpacing())
 
-  # mask.SetSpacing(mask.GetSpacing())
-  mask.SetDirection(mask1.GetDirection())
-  mask.SetOrigin(mask1.GetOrigin())
-  image.SetDirection(image1.GetDirection())
-  image.SetOrigin(image1.GetOrigin())
+  image_out.SetDirection(image_in.GetDirection())
+  image_out.SetOrigin(image_in.GetOrigin())
+  image_out.SetSpacing(image_in.GetSpacing())
 
   output_path = project_folder + "Nifti_crop/" + folder
   if not os.path.exists(output_path):
     os.makedirs(output_path)
 
-  print(mask.GetOrigin(), mask.GetDirection(), mask.GetSpacing())
-  print(image.GetOrigin(), image.GetDirection(), image.GetSpacing())
-
-  sitk.WriteImage(image, output_path + "/image_crop.nii")
-  sitk.WriteImage(mask, output_path + "/mask_crop.nii")
+  sitk.WriteImage(image_out, output_path + "/image_crop.nii")
+  sitk.WriteImage(mask_out, output_path + "/mask_crop.nii")
   
 
 project_folder = "/mnt/c/Users/James/Documents/MPhys-Project/"
@@ -85,4 +82,4 @@ for folder in image_folders:
   image_list.append([folder, image_path, mask_path, CoM])
 
 i = 0
-cube_crop(image_list[i][0], image_list[i][1], image_list[i][2], image_list[i][3], int(max_distance+50))
+cube_crop(image_list[i][0], image_list[i][1], image_list[i][2], image_list[i][3], int(max_distance+15))

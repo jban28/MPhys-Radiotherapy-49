@@ -83,7 +83,7 @@ def full_resample(root, rtstruct, study_paths):
   mask_in.SetDirection(image_in.GetDirection())
   mask_in.SetOrigin(image_in.GetOrigin())
   
-  mask_out = resample_volume(mask_in, mask_in.GetDirection(), mask_in.GetOrigin(), image_in.GetSpacing(), interpolator=sitk.sitkNearestNeighbor, value=0)
+  mask_out = resample_volume(mask_in, mask_in.GetDirection(), mask_in.GetOrigin(), [1,1,1], interpolator=sitk.sitkNearestNeighbor, value=0)
 
   # Creates new path for study
   output_path = root+"Nifti/"+study_paths[0]
