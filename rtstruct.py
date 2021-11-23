@@ -15,9 +15,14 @@ import csv
 def find_image_paths(root):
   # Creates a blank array which will be used to organise image file paths in the format [StudyUID, CT path, RTStruct Path]
   images = []
+  path_list = []
+  original_path_list = os.listdir(root+"Sorted_data")
+  for patient in original_path_list:
+    if 'HMR' in patient:
+      path_list.append(patient)
 
-  path_list = os.listdir(root+"Sorted_data")
-  path_list = path_list[0:9]
+  #path_list = path_list[0:9]
+  print(path_list)
 
   for path in path_list:
     # Extract the first dicom file from each directory in the data folder
@@ -63,9 +68,28 @@ def permute_axes(volume, permutation_order) :
   return permute.Execute(volume)
 
 def full_resample(root, rtstruct, study_paths):
-
+  
   # Loading the 3D Mask from within the RT Struct
-  mask_3d = rtstruct.get_roi_mask_by_name("GTV")
+  try:  
+    mask_3d = rtstruct.get_roi_mask_by_name("GTV")
+  except:
+    try:
+      mask_3d = rtstruct.get_roi_mask_by_name("GTV primaire")
+    except:
+      try:
+        mask_3d = rtstruct.get_roi_mask_by_name("GTV p")
+      except:
+        try:
+          mask_3d = rtstruct.get_roi_mask_by_name("GTVt")
+        except:
+          try:
+            mask_3d = rtstruct.get_roi_mask_by_name("GTV Primaire 70")
+          except:
+            try:
+              mask_3d = rtstruct.get_roi_mask_by_name("GTV T irm")
+            except:
+              return 'No GTV found'
+
   # Converting array to sitk
   mask_3d_bin = mask_3d.astype(np.float32)
   mask_in = sitk.GetImageFromArray(mask_3d_bin)
@@ -107,8 +131,8 @@ def full_resample(root, rtstruct, study_paths):
 
 
 
-project_folder = "/mnt/c/Users/James/Documents/MPhys-Project/"
-#project_folder = "/mnt/c/Users/annaw/Documents/MPhys_Project/"
+#project_folder = "/mnt/c/Users/James/Documents/MPhys-Project/"
+project_folder = "/mnt/c/Users/annaw/Documents/MPhys_Project/"
 
 failed_resamples = []
 
@@ -116,6 +140,7 @@ print("Locating CT images")
 path_list = find_image_paths(project_folder)
 print(path_list)
 x=0
+failed_resamples = 0
 for study in path_list:
   print("Resampling image ", (x+1), " of ", len(path_list))
   # Load existing RT Struct. Requires the series path and existing RT Struct path
@@ -128,16 +153,22 @@ for study in path_list:
       full_resample(project_folder, image_builder, study)
       print("Image resampled successfully")
       path_list[x].append("Succeeded")
-    except:
+      print(study)
+    except Exception as e:
       path_list[x].append("Failed")
+      failed_resamples += 1
       print("Resample failed")
-  except:
+      print(study)
+      print(e)
+  except Exception as e:
     path_list[x].append("Failed")
+    failed_resamples += 1
     print("Resample failed")
-  
+    print(study)
+    print(e)
   x = x + 1
 
-print("Resampling successful on", len(path_list)-len(failed_resamples), "out of", len(path_list))
+print("Resampling successful on", len(path_list)-failed_resamples, "out of", len(path_list))
 
 headings = ["Patient ID", "Study UID", "CT folder", "RTStruct file path", "Resample"] 
 rows = path_list
