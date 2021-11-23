@@ -24,9 +24,12 @@ def cube_crop(folder, image_path, mask_path, CoM, cube_size):
   
   image_array = image_array[min_[0]:max_[0],min_[1]:max_[1],min_[2]:max_[2]]
   mask_array = mask_array[min_[0]:max_[0],min_[1]:max_[1],min_[2]:max_[2]]
+
+  masked_image_array = np.multiply(image_array+1024, mask_array)-1024
   
   image_out = sitk.GetImageFromArray(image_array)
   mask_out = sitk.GetImageFromArray(mask_array)
+  masked_image_out = sitk.GetImageFromArray(masked_image_array)
 
   mask_out.SetDirection(mask_in.GetDirection())
   mask_out.SetOrigin(mask_in.GetOrigin())
@@ -36,12 +39,17 @@ def cube_crop(folder, image_path, mask_path, CoM, cube_size):
   image_out.SetOrigin(image_in.GetOrigin())
   image_out.SetSpacing(image_in.GetSpacing())
 
+  masked_image_out.SetDirection(mask_in.GetDirection())
+  masked_image_out.SetOrigin(mask_in.GetOrigin())
+  masked_image_out.SetSpacing(mask_in.GetSpacing())
+
   output_path = project_folder + "Nifti_crop/" + folder
   if not os.path.exists(output_path):
     os.makedirs(output_path)
 
   sitk.WriteImage(image_out, output_path + "/image_crop.nii")
   sitk.WriteImage(mask_out, output_path + "/mask_crop.nii")
+  sitk.WriteImage(masked_image_out, output_path +"/masked_image_crop.nii")
   
 
 project_folder = "/mnt/c/Users/James/Documents/MPhys-Project/"
