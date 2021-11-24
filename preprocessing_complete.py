@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import SimpleITK as sitk
 import os
+import csv
 
 # Specify root folder for the project, where all images and data will be stored 
 # and where the TCIA file is downloaded to
@@ -41,8 +42,8 @@ def crop(array, CoM, size):
 
 # Open the metadata.csv file, convert to an array, and remove column headers
 metadata_file = open(project_folder + "/metadata.csv")
-metadata = np.loadtxt(metadata_file, delimiter=",")
-del metadata[0]
+metadata = np.loadtxt(metadata_file, dtype="str", delimiter=",")
+metadata = metadata[1:][:]
 
 # Creates new path for resampled images if one does not already exist
 if not os.path.exists(project_folder+"/resample"):
@@ -52,27 +53,54 @@ if not os.path.exists(project_folder+"/resample"):
 if not os.path.exists(project_folder+"/crop"):
   os.makedirs(project_folder+"/crop")
 
+# Create an empty list to store patient data in. This will eventually be a copy 
+# of the metadata array, but with extra elements for the tumour CoM and maximum 
+# distance of tumour from CoM
+patient_data = []
+
+# Create an empty array to log errors
+errors = []
+
 for patient in metadata:
+  print("Resampling patient " + patient[0])
+  # Convert patient from np array to list
+  patient = patient.tolist()
+
   # Build image and mask from their respective dicom series
   try: 
     image_builder = RTStructBuilder.create_from(
-      dicom_series_path = project_folder + "/" + manifest + "/" + patient[2],
-      rt_struct_path = project_folder + "/" + manifest + "/" + 
-      os.listdir(patient[3])[0]
+      dicom_series_path = project_folder + "/" + manifest + patient[2],
+      rt_struct_path = project_folder + "/" + manifest + patient[3] + "/" +
+      os.listdir(project_folder + "/" + manifest + patient[3])[0]
     )
   except:
     print("Unable to build image for " + patient[0])
+    errors.append([patient[0], "Unable to build image"])
+    continue
   
   # Read in image to SimpleITK
-  reader = sitk.ImageSeriesReader()
-  dcm_paths = reader.GetGDCMSeriesFileNames(image_builder.dicom_series_path)
-  reader.SetFileNames(dcm_paths)
-  image_in = reader.Execute()
+  try: 
+    reader = sitk.ImageSeriesReader()
+    dcm_paths = reader.GetGDCMSeriesFileNames(project_folder + "/" + manifest + 
+    "/" + patient[2])
+    reader.SetFileNames(dcm_paths)
+    image_in = reader.Execute()
+  except:
+    print("Could not extract SimpleITK image from dicom series for patient " + 
+    patient[0])
+    errors.append([patient[0], 
+    "Could not extract SimpleITK image from dicom series"])
+    continue
 
   # Read in mask as an array and convert to SimpleITK image
-  mask_3d = image_builder.get_roi_mask_by_name(patient[4])
-  mask_3d_bin = mask_3d.astype(np.float32)
-  mask_in = sitk.GetImageFromArray(mask_3d_bin)
+  try: 
+    mask_3d = image_builder.get_roi_mask_by_name(patient[4])
+    mask_3d_bin = mask_3d.astype(np.float32)
+    mask_in = sitk.GetImageFromArray(mask_3d_bin)
+  except:
+    print("Failed to read in mask for patient " + patient[0])
+    errors.append([patient[0], "Failed to read mask"])
+    continue
 
   # Set parameters of SimpleITK mask
   mask_in = permute_axes(mask_in, [1,2,0])
@@ -81,11 +109,16 @@ for patient in metadata:
   mask_in.SetOrigin(image_in.GetOrigin())
 
   # Resample the image and mask
-  image_out = resample_volume(image_in, image_in.GetDirection(), 
-  image_in.GetOrigin(), [1,1,1])  
-  mask_out = resample_volume(mask_in, mask_in.GetDirection(), 
-  mask_in.GetOrigin(), [1,1,1], interpolator=sitk.sitkNearestNeighbor, value=0)
-
+  try:
+    image_out = resample_volume(image_in, image_in.GetDirection(), 
+    image_in.GetOrigin(), [1,1,1])  
+    mask_out = resample_volume(mask_in, mask_in.GetDirection(), 
+    mask_in.GetOrigin(), [1,1,1], interpolator=sitk.sitkNearestNeighbor, value=0)
+  except:
+    print("Resample failed for patient " + patient[0])
+    errors.append([patient[0], "Resample failed"])
+    continue
+    
   # Convert mask back to array, find CoM of tumour and add to metadata
   mask_array = sitk.GetArrayFromImage(mask_out)
   non_zeros = np.argwhere(mask_array)
@@ -104,16 +137,34 @@ for patient in metadata:
   patient.append(max_distance)
 
   # Write image and mask to resample folder
-  sitk.WriteImage(image_out, project_folder + "/resample/" + patient[0] + 
-  "/image.nii")
-  sitk.WriteImage(mask_out, project_folder + "/resample/" + patient[0] + 
-  "/mask.nii")
+  try:
+    if not os.path.exists(project_folder + "/resample/" + patient[0]):
+      os.makedirs(project_folder + "/resample/" + patient[0])
+    sitk.WriteImage(image_out, project_folder + "/resample/" + patient[0] + 
+    "/image.nii")
+    sitk.WriteImage(mask_out, project_folder + "/resample/" + patient[0] + 
+    "/mask.nii")
+  except:
+    print("Could not write to file for patient " + patient[0])
+    errors.append([patient[0], "File write failed"])
+    continue
+
+  # Adds all metadata (inlcuding newly calculated CoM and max_distance) to list 
+  # of patient metadata
+  patient_data.append(patient)
 
 # Define size of crop based on maximum tumour size
-cube_size = max(metadata[:][11])
+cube_size = 0
+for patient in patient_data:
+  if patient[10] > cube_size:
+    cube_size = int(patient[10])
+
+# Add padding to crop of 15 pixels
+cube_size += 15
 
 # Crop each image and mask to above size and output masked image
-for patient in metadata:
+for patient in patient_data:
+  print("Cropping patient " + patient[0])
   # Read in as SimpleITK
   image_in = sitk.ReadImage(project_folder + "/resample/" + patient[0] + 
   "/image.nii")
@@ -125,8 +176,13 @@ for patient in metadata:
   mask_array = sitk.GetArrayFromImage(mask_in)
 
   # Crop image and mask
-  image_array = crop(image_array, patient[10], cube_size)
-  mask_array = crop(mask_array, patient[10], cube_size)
+  try:
+    image_array = crop(image_array, patient[9], cube_size)
+    mask_array = crop(mask_array, patient[9], cube_size)
+  except:
+    print("Cropping failed for patient " + patient[0])
+    errors.append([patient[0], "Cropping failed"])
+    continue
 
   # Produce array for masked image and convert back to SimpleITK
   masked_image_array = np.multiply(image_array+1024, mask_array)-1024
@@ -138,5 +194,16 @@ for patient in metadata:
   masked_image_out.SetSpacing(mask_in.GetSpacing())
 
   # Write masked image to file
-  sitk.WriteImage(masked_image_out, project_folder + "/crop/" + patient[0] + 
-  ".nii")
+  try:
+    sitk.WriteImage(masked_image_out, project_folder + "/crop/" + patient[0] + 
+    ".nii")
+  except:
+    print("Could not write cropped image for patient " + patient[0])
+    errors.append([patient[0], "Failed to write cropped image"])
+    continue
+
+
+print("Processing completed with ", len(errors), "errors")
+with open(project_folder + '/Error Log.csv', 'w') as f: 
+    write = csv.writer(f) 
+    write.writerows(errors) 

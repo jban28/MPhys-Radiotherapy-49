@@ -1,9 +1,6 @@
 array = [
-  ["name1", "name2"],
-  ["name3", "name4"]
+  [1, 1, 1],
+  [3, 2, 3]
 ]
 
-for line in array:
-  line.append("test")
-
-print(array)
+print(len(array))
