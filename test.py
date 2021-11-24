@@ -1,8 +1,9 @@
 array = [
-  [[1,2,3],[4,5,6],[7,8,9]],
-  [["a","b","c"],["d","e","f"],["g","h","i"]],
-  [[1,2,3],[4,5,6],[7,8,9]]
-  ]
+  ["name1", "name2"],
+  ["name3", "name4"]
+]
 
-array = array[0:2][0:2][0:2]
+for line in array:
+  line.append("test")
+
 print(array)
