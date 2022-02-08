@@ -67,7 +67,7 @@ for patient in metadata:
   patient = patient.tolist()
 
   # Build image and mask from their respective dicom series
-  try: 
+  try:
     image_builder = RTStructBuilder.create_from(
       dicom_series_path = project_folder + "/" + manifest + patient[2],
       rt_struct_path = project_folder + "/" + manifest + patient[3] + "/" +
