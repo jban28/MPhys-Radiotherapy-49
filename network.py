@@ -4,7 +4,7 @@ import random
 import numpy as np
 import matplotlib.pyplot as plt
 
-
+from torch import nn
 from datetime import datetime
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
@@ -17,7 +17,7 @@ def metadata(project_folder):
   metadata = metadata[1:][:]
   return metadata
 
-def split(self, outcome_list, train_ratio):
+def split(outcome_list, train_ratio):
   train = int(train_ratio * len(outcome_list))
   validate = int(0.5 * (len(outcome_list) - train))
 
@@ -235,7 +235,7 @@ def Run(project_folder, train_outcomes, validation_outcomes, test_outcomes, mode
   return accuracy, train_losses, validate_losses
 
 class ImageDataset(Dataset):
-  def __init__(self, annotations, img_dir, transform=data_transform, target_transform=None):
+  def __init__(self, annotations, img_dir, transform=None, target_transform=None):
     self.img_labels = annotations
     self.img_dir = img_dir
     self.transform = transform
@@ -317,10 +317,10 @@ metadata = metadata(project_folder)
 
 train_outcomes, validation_outcomes, test_outcomes, outcome_description = binary_outcome(metadata, 1, 500)
 
-model = CNN(), 
-loss_fn = nn.BCEWithLogitsLoss(torch.tensor(len(train_outcomes)/len(metadata))),
-learning_rate = 0.001,
-epochs = 10,
+model = CNN()
+loss_fn = nn.BCEWithLogitsLoss(torch.tensor(len(train_outcomes)/len(metadata)))
+learning_rate = 0.001
+epochs = 10
 batch_size = 2
 
 repeats = 3
