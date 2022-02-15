@@ -1,20 +1,24 @@
 import os
+import sys
 import torch
 import random
 import numpy as np
+import SimpleITK as sitk
 import matplotlib.pyplot as plt
 
 from torch import nn
+from torch import reshape
 from datetime import datetime
 from torch.utils.data import Dataset
+from torchinfo import summary
 from torch.utils.data import DataLoader
 
 
-def metadata(project_folder):
+def find_metadata(project_folder):
   # Open the metadata.csv file, convert to an array, and remove column headers
-  metadata_file = open(project_folder + "metadata.csv")
+  metadata_file = open(project_folder + "/metadata.csv")
   metadata = np.loadtxt(metadata_file, dtype="str", delimiter=",")
-  metadata = metadata[1:][:]
+  metadata = metadata[1:24][:]
   return metadata
 
 def split(outcome_list, train_ratio):
@@ -33,7 +37,7 @@ def split(outcome_list, train_ratio):
 
   return train_labels, validate_labels, test_labels
 
-def binary_outcome(metadata, outcome_type, check_day):
+def binary_outcome(project_folder, subfolder, metadata, outcome_type, check_day):
   positives = []
   negatives = []
   # Loop through each patient and identify whether they are true or false for the specified outcome from above
@@ -51,7 +55,7 @@ def binary_outcome(metadata, outcome_type, check_day):
       # Event occurred after check day
       outcome = 0
 
-    if not os.path.exists(project_folder + "crop/" + patient[0] + ".nii"):
+    if not os.path.exists(project_folder + "/" + subfolder + "/Images/" + patient[0] + ".nii"):
       # No image file found for patient
       continue
     
@@ -68,7 +72,7 @@ def binary_outcome(metadata, outcome_type, check_day):
 
   return tr_pos + tr_neg, val_pos + val_neg, test_pos + test_neg, description
 
-def train_loop(dataloader, model, loss_fn, optimizer):
+def train_loop(dataloader, model, loss_fn, optimizer, device):
     size = len(dataloader.dataset)
     for batch, (X, y) in enumerate(dataloader):
         # Compute prediction and loss
@@ -86,7 +90,6 @@ def train_loop(dataloader, model, loss_fn, optimizer):
             hot_y[index,0] = 0
             hot_y[index,1] = 1
       
-        print(hot_y)
         pred = model(X)
         torch.squeeze(pred)
         loss = loss_fn(pred, hot_y.float())
@@ -102,7 +105,7 @@ def train_loop(dataloader, model, loss_fn, optimizer):
             print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
     return loss
 
-def validate_loop(dataloader, model, loss_fn):
+def validate_loop(dataloader, model, loss_fn, device):
     size = len(dataloader.dataset)
     num_batches = len(dataloader)
     validate_loss, correct = 0, 0
@@ -143,7 +146,7 @@ def validate_loop(dataloader, model, loss_fn):
     print(f"Validate Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {validate_loss:>8f} \n")
     return validate_loss, accuracy
 
-def test_loop(dataloader, model):
+def test_loop(dataloader, model, device):
     size = len(dataloader.dataset)
     num_batches = len(dataloader)
     test_loss, correct = 0, 0
@@ -188,12 +191,7 @@ def loss_plot(train_losses, validation_losses):
   ax.legend()
   return fig
 
-def results(project_folder):
-  with open(project_folder + "/results/results.csv", "w") as f: 
-    write = csv.writer(f) 
-    write.writerows() 
-
-def Run(project_folder, train_outcomes, validation_outcomes, test_outcomes, model, loss_fn, learning_rate, epochs, batch_size):
+def Run(project_folder, subfolder, train_outcomes, validation_outcomes, test_outcomes, model, loss_fn, learning_rate, epochs, batch_size):
   # Connect to GPU if available
   device = 'cuda' if torch.cuda.is_available() else 'cpu'
   print(f'Using {device} device')
@@ -204,14 +202,14 @@ def Run(project_folder, train_outcomes, validation_outcomes, test_outcomes, mode
   optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
 
   # Build Datasets
-  training_data = ImageDataset(train_outcomes, project_folder + "crop/")
-  validation_data = ImageDataset(validation_outcomes, project_folder + "crop/")
-  test_data = ImageDataset(test_outcomes, project_folder + "crop/")
+  training_data = ImageDataset(train_outcomes, project_folder + "/" + subfolder + "/Images/")
+  validation_data = ImageDataset(validation_outcomes, project_folder + "/" + subfolder + "/Images/")
+  test_data = ImageDataset(test_outcomes, project_folder + "/" + subfolder + "/Images/")
 
   # Build Dataloaders
-  train_dataloader = DataLoader(training_data, batch_size=2, shuffle=True)
-  validate_dataloader = DataLoader(validation_data, batch_size=2, shuffle=True)
-  test_dataloader = DataLoader(test_data, batch_size=2, shuffle=True)
+  train_dataloader = DataLoader(training_data, batch_size, shuffle=True)
+  validate_dataloader = DataLoader(validation_data, batch_size, shuffle=True)
+  test_dataloader = DataLoader(test_data, batch_size, shuffle=True)
 
   # Training
   train_losses = [[],[]]
@@ -219,8 +217,8 @@ def Run(project_folder, train_outcomes, validation_outcomes, test_outcomes, mode
   validate_accuracies = [[],[]]
   for t in range(epochs):
       print(f"Epoch {t+1}\n-------------------------------")
-      train_loss = train_loop(train_dataloader, model, loss_fn, optimizer)
-      validate_loss = validate_loop(validate_dataloader, model, loss_fn)
+      train_loss = train_loop(train_dataloader, model, loss_fn, optimizer, device)
+      validate_loss = validate_loop(validate_dataloader, model, loss_fn, device)
 
       train_losses[0].append(t)
       train_losses[1].append(train_loss)
@@ -231,8 +229,12 @@ def Run(project_folder, train_outcomes, validation_outcomes, test_outcomes, mode
   print("Done!")
 
   # Testing
-  accuracy = test_loop(test_dataloader, model)
-  return accuracy, train_losses, validate_losses
+  accuracy = test_loop(test_dataloader, model, device)
+
+  parameters = str(summary(model, (batch_size, 1, 246, 246, 246), verbose=0))
+
+
+  return accuracy, train_losses, validate_losses, model, parameters
 
 class ImageDataset(Dataset):
   def __init__(self, annotations, img_dir, transform=None, target_transform=None):
@@ -241,37 +243,19 @@ class ImageDataset(Dataset):
     self.transform = transform
     self.target_transform = target_transform
 
-    def __len__(self):
-        return len(self.img_labels)
+  def __len__(self):
+      return len(self.img_labels)
 
-    def __getitem__(self, idx):
-        img_path = os.path.join(self.img_dir, self.img_labels[idx][0]+".nii")
-        image_sitk = sitk.ReadImage(img_path)
-        image = sitk.GetArrayFromImage(image_sitk)
-        label = self.img_labels[idx][1]
-        #augmented = self.transform(image)    # new line
-        # aug = transforms(image)
-        if self.transform:
-          ##augmented = self.transform(image)
-            # aug = K.AugmentationSequential(
-            #     K.RandomAffine(5, p=1.0),
-            #     K.RandomAffine(360, scale=[0.8,1.2], p=0),
-            #     K.RandomHorizontalFlip(p=0),
-            #   # K.Normalize()
-            #     data_keys=["input", "bbox", "keypoints", "mask"],
-            #     return_transform=False,
-            #     same_on_batch=False,
-            # )
-            # out_tensors = aug(img_tensor, bbox, keypoints, mask)  #new line
-          #out_tensors = augmented(image)
-          ##out_tensors = augmented.values()  #new line
-          image = self.transform(image)
-            #image = self.transform(image) # only original line in if statement
-            
-        if self.target_transform:
-          label = self.target_transform(label)
-        return image, label
-        #return torch.tensor(image, dtype=torch.float), label
+  def __getitem__(self, idx):
+      img_path = os.path.join(self.img_dir, self.img_labels[idx][0]+".nii")
+      image_sitk = sitk.ReadImage(img_path)
+      image = sitk.GetArrayFromImage(image_sitk)
+      label = self.img_labels[idx][1]
+      if self.transform:
+        image = self.transform(image)
+      if self.target_transform:
+        label = self.target_transform(label)
+      return image, label
 
 class CNN(nn.Module):
   def __init__(self):
@@ -306,35 +290,44 @@ class CNN(nn.Module):
     x = self.linear_layers(x)
     return x
 
-project_folder = "/mnt/c/Users/James/Google Drive/Degree/MPhys/Data/"
-if not os.path.exists(project_folder + "/results"):
-  os.makedirs(project_folder + "/results")
+project_folder = sys.argv[1] # "/content/drive/My Drive/Degree/MPhys/Data"
+subfolder = sys.argv[2] # "crop"
+
+if not os.path.exists(project_folder + "/" + subfolder + "/Results"):
+  os.makedirs(project_folder + "/" + subfolder + "/Results")
 
 date = datetime.now().strftime("%Y_%m_%d-%I:%M:%S_%p")
-os.makedirs(project_folder + "/results/" + date)
+os.makedirs(project_folder + "/" + subfolder + "/Results/" + date)
 
-metadata = metadata(project_folder)
-
-train_outcomes, validation_outcomes, test_outcomes, outcome_description = binary_outcome(metadata, 1, 500)
+metadata = find_metadata(project_folder)
+train_outcomes, validation_outcomes, test_outcomes, outcome_description = binary_outcome(project_folder, subfolder, metadata, 1, 500)
 
 model = CNN()
 loss_fn = nn.BCEWithLogitsLoss(torch.tensor(len(train_outcomes)/len(metadata)))
 learning_rate = 0.001
-epochs = 10
-batch_size = 2
+epochs = 1
+batch_size = 4
 
-repeats = 3
+repeats = 1
 accuracies = []
+
+logger = ""
 
 counter = 0
 while counter < repeats:
   counter += 1
-  accuracy, train_losses, validation_losses = Run(project_folder, train_outcomes, validation_outcomes, test_outcomes, model,loss_fn,learning_rate,epochs,batch_size)
+  accuracy, train_losses, validation_losses, model, parameters = Run(project_folder, subfolder, train_outcomes, validation_outcomes, test_outcomes, model,loss_fn,learning_rate,epochs,batch_size)
   accuracies.append(accuracy)
   loss = loss_plot(train_losses, validation_losses)
-  plt.savefig(project_folder + "/results/" + date + "/loss" + counter + ".png")
+  plt.savefig(project_folder + "/" + subfolder + "/Results/" + str(date) + "/loss" + str(counter) + ".png")
 
 average_test_accuracy = np.average(accuracies)
 
+results = "".join("Date/time: " + str(date) + "\n" + "Average test accuracy: " + str(100*average_test_accuracy) + "%\n" + "Epochs: " + str(epochs) +"\n" + "Batch size: " + str(batch_size) + "\n" + "Repeats: " + str(repeats) + "\n" + "Learning rate: " + str(learning_rate) + "\n" + "Model: " + model.__repr__() + "\n" + parameters)
 
 
+print(results)
+
+with open(project_folder + "/" + subfolder + "/Results/" + "/" + date +'/Summary.txt', 'w') as f:
+    f.write(results)
+    f.close()
