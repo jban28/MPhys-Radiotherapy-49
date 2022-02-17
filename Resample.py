@@ -1,20 +1,16 @@
-from rt_utils import RTStructBuilder
-from datetime import datetime
-import matplotlib.pyplot as plt
+import os
+import sys
 import numpy as np
 import SimpleITK as sitk
-import os
-import csv
-import sys
+
+from rt_utils import RTStructBuilder
 
 # Specify root folder for the project, where all images and data will be stored 
 # and where the TCIA file is downloaded to
-project_folder = sys.argv[1] # "/mnt/f/MPhys"
+project_folder = sys.argv[1]
 
 # Specify the name of the manifest file where the dicoms are extracted to
-manifest = sys.argv[2] # "manifest-VpKfQUDr2642018792281691204"
-
-date = datetime.now().strftime("%Y_%m_%d-%I:%M:%S_%p")
+manifest = sys.argv[2]
 
 def permute_axes(volume, permutation_order) :
   permute = sitk.PermuteAxesImageFilter()
@@ -33,17 +29,6 @@ interpolator = sitk.sitkLinear, value=-1024):
   resample.SetDefaultPixelValue(value)
   return resample.Execute(volume)
 
-def crop(array, CoM, size):
-  # Define dimensions to crop to
-  min_ = [int(CoM[0]-size), int(CoM[1]-size), int(CoM[2]-size)]
-  max_ = [int(CoM[0]+size), int(CoM[1]+size), int(CoM[2]+size)]
-
-  # Crop array
-  array = array[min_[0]:max_[0],min_[1]:max_[1],min_[2]:max_[2]]
-
-  # Return cropped array
-  return array
-
 # Open the metadata.csv file, convert to an array, and remove column headers
 metadata_file = open(project_folder + "/metadata.csv")
 metadata = np.loadtxt(metadata_file, dtype="str", delimiter=",")
@@ -53,19 +38,19 @@ metadata = metadata[1:][:]
 if not os.path.exists(project_folder+"/resample"):
   os.makedirs(project_folder+"/resample")
 
-# Creates new path for cropped images if one does not already exist
-if not os.path.exists(project_folder+"/crop_"+str(date)):
-  os.makedirs(project_folder+"/crop_"+str(date))
+# Create an empty array to log errors
+errors = []
 
 # Create an empty list to store patient data in. This will eventually be a copy 
 # of the metadata array, but with extra elements for the tumour CoM and maximum 
 # distance of tumour from CoM
 patient_data = []
 
-# Create an empty array to log errors
-errors = []
-
 for patient in metadata:
+  if os.path.exists(project_folder + "/resample/" + patient[0]):
+    print("Patient already resampled, skipping")
+    continue
+
   print("Resampling patient " + patient[0])
   # Convert patient from np array to list
   patient = patient.tolist()
@@ -157,57 +142,13 @@ for patient in metadata:
   # of patient metadata
   patient_data.append(patient)
 
-# Define size of crop based on maximum tumour size
-cube_size = 0
-for patient in patient_data:
-  if patient[10] > cube_size:
-    cube_size = int(patient[10])
-
-# Add padding to crop of 15 pixels
-cube_size += 15
-
-# Crop each image and mask to above size and output masked image
-for patient in patient_data:
-  print("Cropping patient " + patient[0])
-  # Read in as SimpleITK
-  image_in = sitk.ReadImage(project_folder + "/resample/" + patient[0] + 
-  "/image.nii")
-  mask_in = sitk.ReadImage(project_folder + "/resample/" + patient[0] + 
-  "/mask.nii")
-
-  # Convert to arrays
-  image_array = sitk.GetArrayFromImage(image_in)
-  mask_array = sitk.GetArrayFromImage(mask_in)
-
-  # Crop image and mask
-  try:
-    image_array = crop(image_array, patient[9], cube_size)
-    mask_array = crop(mask_array, patient[9], cube_size)
-  except:
-    print("Cropping failed for patient " + patient[0])
-    errors.append([patient[0], "Cropping failed"])
-    continue
-
-  # Produce array for masked image and convert back to SimpleITK
-  masked_image_array = np.multiply(image_array+1024, mask_array)-1024
-  masked_image_out = sitk.GetImageFromArray(masked_image_array)
-
-  # Define image properties based on input image
-  masked_image_out.SetDirection(mask_in.GetDirection())
-  masked_image_out.SetOrigin(mask_in.GetOrigin())
-  masked_image_out.SetSpacing(mask_in.GetSpacing())
-
-  # Write masked image to file
-  try:
-    sitk.WriteImage(masked_image_out, project_folder + "/crop_" + str(date) + 
-    patient[0] + ".nii")
-  except:
-    print("Could not write cropped image for patient " + patient[0])
-    errors.append([patient[0], "Failed to write cropped image"])
-    continue
+with open(project_folder + "/metadata_resample.csv", 'w') as f:
+  f.write("Patient ID",	"Study UID",	"CT",	"RTSTRUCT",	"Name", "GTV Primary",	"Last Follow Up",	"Time to LR",	"Time to DM",	"Time to Death", "Tumour CoM", "Tumour max size")
+  f.write(",".join(patient_data))
+  f.close()
 
 
-print("Processing completed with ", len(errors), "errors")
+print("Resampling completed with ", len(errors), "errors")
 with open(project_folder + "/crop_" + str(date) "/Preprocessing Errors.csv", 'w') as f: 
-    write = csv.writer(f) 
-    write.writerows(errors) 
+  write = csv.writer(f) 
+  write.writerows(errors) 
