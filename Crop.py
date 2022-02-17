@@ -86,6 +86,6 @@ for patient in patient_data:
     continue
 
 print("Cropping completed with ", len(errors), "errors")
-with open(project_folder + "/crop_" + str(date) "/Cropping Errors/" + d.csv, 'w') as f: 
+with open(project_folder + "/crop_" + str(date) + "/Cropping Errors.csv", "w") as f:
     write = csv.writer(f) 
     write.writerows(errors) 
