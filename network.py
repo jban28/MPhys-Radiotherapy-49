@@ -8,9 +8,9 @@ import matplotlib.pyplot as plt
 
 from torch import nn
 from torch import reshape
+from torchinfo import summary
 from datetime import datetime
 from torch.utils.data import Dataset
-from torchinfo import summary
 from torch.utils.data import DataLoader
 
 
@@ -300,20 +300,25 @@ date = datetime.now().strftime("%Y_%m_%d-%I:%M:%S_%p")
 os.makedirs(project_folder + "/" + subfolder + "/Results/" + date)
 
 metadata = find_metadata(project_folder)
-train_outcomes, validation_outcomes, test_outcomes, outcome_description = binary_outcome(project_folder, subfolder, metadata, 1, 500)
 
-model = CNN()
-loss_fn = nn.BCEWithLogitsLoss(torch.tensor(len(train_outcomes)/len(metadata)))
-learning_rate = 0.001
-epochs = 1
-batch_size = 4
+if int(sys.argv[3]) == 1:
+  train_outcomes, validation_outcomes, test_outcomes, outcome_description = binary_outcome(project_folder, subfolder, metadata, 1, 500)
 
-repeats = 1
+if int(sys.argv[4]) == 1:
+  model = CNN()
+
+if int(sys.argv[5]) == 1:
+  loss_fn = nn.BCEWithLogitsLoss(torch.tensor(len(train_outcomes)/len(metadata)))
+
+epochs = sys.argv[6]
+batch_size = sys.argv[7]
+repeats = sys.argv[8]
+learning_rate = sys.argv[9]
+
 accuracies = []
 
-logger = ""
-
 counter = 0
+
 while counter < repeats:
   counter += 1
   accuracy, train_losses, validation_losses, model, parameters = Run(project_folder, subfolder, train_outcomes, validation_outcomes, test_outcomes, model,loss_fn,learning_rate,epochs,batch_size)
@@ -324,7 +329,6 @@ while counter < repeats:
 average_test_accuracy = np.average(accuracies)
 
 results = "".join("Date/time: " + str(date) + "\n" + "Average test accuracy: " + str(100*average_test_accuracy) + "%\n" + "Epochs: " + str(epochs) +"\n" + "Batch size: " + str(batch_size) + "\n" + "Repeats: " + str(repeats) + "\n" + "Learning rate: " + str(learning_rate) + "\n" + "Model: " + model.__repr__() + "\n" + parameters)
-
 
 print(results)
 

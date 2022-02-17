@@ -208,6 +208,6 @@ for patient in patient_data:
 
 
 print("Processing completed with ", len(errors), "errors")
-with open(project_folder + '/Error Log.csv', 'w') as f: 
+with open(project_folder + '/Preprocessing Errors.csv', 'w') as f: 
     write = csv.writer(f) 
     write.writerows(errors) 
