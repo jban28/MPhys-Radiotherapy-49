@@ -1,5 +1,6 @@
 import os
 import sys
+import csv
 import numpy as np
 import SimpleITK as sitk
 
@@ -149,6 +150,6 @@ with open(project_folder + "/metadata_resample.csv", 'w') as f:
 
 
 print("Resampling completed with ", len(errors), "errors")
-with open(project_folder + "/crop_" + str(date) "/Preprocessing Errors.csv", 'w') as f: 
+with open(project_folder + "/Preprocessing Errors.csv", 'w') as f: 
   write = csv.writer(f) 
   write.writerows(errors) 
