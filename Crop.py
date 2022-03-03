@@ -1,3 +1,4 @@
+from curses import meta
 import os
 import sys
 import csv
@@ -10,7 +11,7 @@ from datetime import datetime
 # and where the TCIA file is downloaded to
 project_folder = sys.argv[1]
 
-date = datetime.now().strftime("%Y_%m_%d-%H:%M:%S")
+date = datetime.now().strftime("%Y_%m_%d-%H_%M_%S")
 
 def crop(array, CoM, size):
   # Define dimensions to crop to
@@ -28,9 +29,11 @@ metadata_file = open(project_folder + "/metadata_resample.csv")
 metadata = np.loadtxt(metadata_file, dtype="str", delimiter=",")
 metadata = metadata[1:][:]
 
+
 # Creates new path for cropped images if one does not already exist
 if not os.path.exists(project_folder+"/crop_"+str(date)):
   os.makedirs(project_folder+"/crop_"+str(date))
+  os.makedirs(project_folder+"/crop_"+str(date)+"/Images")
 
 
 patient_data = []
@@ -38,9 +41,13 @@ errors = []
 
 # Define size of crop based on maximum tumour size
 cube_size = 0
-for patient in patient_data:
-  if patient[10] > cube_size:
-    cube_size = int(patient[10])
+for patient in metadata:
+  if float(patient[12]) > 90:
+    continue
+  else:
+    patient_data.append(patient)
+  if float(patient[12]) > cube_size:
+    cube_size = int(float(patient[12]))
 
 # Add padding to crop of 15 pixels
 cube_size += 15
@@ -60,8 +67,9 @@ for patient in patient_data:
 
   # Crop image and mask
   try:
-    image_array = crop(image_array, patient[9], cube_size)
-    mask_array = crop(mask_array, patient[9], cube_size)
+    CoM = (float(patient[9]),float(patient[10]),float(patient[11]))
+    image_array = crop(image_array, CoM, cube_size)
+    mask_array = crop(mask_array, CoM, cube_size)
   except:
     print("Cropping failed for patient " + patient[0])
     errors.append([patient[0], "Cropping failed"])
@@ -78,7 +86,7 @@ for patient in patient_data:
 
   # Write masked image to file
   try:
-    sitk.WriteImage(masked_image_out, project_folder + "/crop_" + str(date) + 
+    sitk.WriteImage(masked_image_out, project_folder + "/crop_" + str(date) 
     + "/Images/" + patient[0] + ".nii")
   except:
     print("Could not write cropped image for patient " + patient[0])
@@ -86,6 +94,6 @@ for patient in patient_data:
     continue
 
 print("Cropping completed with ", len(errors), "errors")
-with open(project_folder + "/crop_" + str(date) + "/Cropping Errors.csv", "w") as f:
+with open(project_folder + "crop_errors_" + str(date) + ".csv", "w") as f:
     write = csv.writer(f) 
     write.writerows(errors) 

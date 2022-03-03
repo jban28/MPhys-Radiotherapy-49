@@ -4,6 +4,7 @@ import csv
 import numpy as np
 import SimpleITK as sitk
 
+from datetime import datetime
 from rt_utils import RTStructBuilder
 
 # Specify root folder for the project, where all images and data will be stored 
@@ -39,13 +40,15 @@ metadata = metadata[1:][:]
 if not os.path.exists(project_folder+"/resample"):
   os.makedirs(project_folder+"/resample")
 
+# Create CSV file to store resampling data
+if not os.path.exists(project_folder+"/metadata_resample.csv"):
+  with open(project_folder + "/metadata_resample.csv", 'w') as f:
+    write = csv.writer(f) 
+    write.writerow(["Patient ID",	"Study UID",	"CT",	"RTSTRUCT",	"GTV Name",	"Last Follow Up",	"Time to LR",	"Time to DM",	"Time to Death", "CoM x", "CoM y", "CoM z", "Tumour max size"]) 
+    f.close()
+
 # Create an empty array to log errors
 errors = []
-
-# Create an empty list to store patient data in. This will eventually be a copy 
-# of the metadata array, but with extra elements for the tumour CoM and maximum 
-# distance of tumour from CoM
-patient_data = []
 
 for patient in metadata:
   if os.path.exists(project_folder + "/resample/" + patient[0]):
@@ -67,7 +70,7 @@ for patient in metadata:
     print("Unable to build image for " + patient[0])
     errors.append([patient[0], "Unable to build image"])
     continue
-  
+
   # Read in image to SimpleITK
   try: 
     reader = sitk.ImageSeriesReader()
@@ -93,10 +96,14 @@ for patient in metadata:
     continue
 
   # Set parameters of SimpleITK mask
-  mask_in = permute_axes(mask_in, [1,2,0])
-  mask_in.SetSpacing(image_in.GetSpacing())
-  mask_in.SetDirection(image_in.GetDirection())
-  mask_in.SetOrigin(image_in.GetOrigin())
+  try:
+    mask_in = permute_axes(mask_in, [1,2,0])
+    mask_in.SetSpacing(image_in.GetSpacing())
+    mask_in.SetDirection(image_in.GetDirection())
+    mask_in.SetOrigin(image_in.GetOrigin())
+  except:
+    print("Could not set mask parameters for patient " + patient[0])
+    errors.append([patient[0], "Failed to set parameters"])
 
   # Resample the image and mask
   try:
@@ -115,8 +122,9 @@ for patient in metadata:
   CoM_x = np.average(non_zeros[:,0])
   CoM_y = np.average(non_zeros[:,1])
   CoM_z = np.average(non_zeros[:,2])
-  CoM = [CoM_x, CoM_y, CoM_z]
-  patient.append(CoM)
+  patient.append(str(CoM_x))
+  patient.append(str(CoM_y))
+  patient.append(str(CoM_z))
 
   # Find maximum distance of tumour from CoM and add to metadata
   max_distance = 0
@@ -124,7 +132,7 @@ for patient in metadata:
     displacement = [abs(vox[0]-CoM_x), abs(vox[1]-CoM_y), abs(vox[2]-CoM_z)]
     if max(displacement) > max_distance:
       max_distance = max(displacement)
-  patient.append(max_distance)
+  patient.append(str(max_distance))
 
   # Write image and mask to resample folder
   try:
@@ -139,17 +147,13 @@ for patient in metadata:
     errors.append([patient[0], "File write failed"])
     continue
 
-  # Adds all metadata (inlcuding newly calculated CoM and max_distance) to list 
-  # of patient metadata
-  patient_data.append(patient)
-
-with open(project_folder + "/metadata_resample.csv", 'w') as f:
-  f.write("Patient ID",	"Study UID",	"CT",	"RTSTRUCT",	"Name", "GTV Primary",	"Last Follow Up",	"Time to LR",	"Time to DM",	"Time to Death", "Tumour CoM", "Tumour max size")
-  f.write(",".join(patient_data))
-  f.close()
-
+  with open(project_folder + "/metadata_resample.csv", 'a', newline = '') as f: 
+    write = csv.writer(f)
+    write.writerow(patient)
+    f.close()
 
 print("Resampling completed with ", len(errors), "errors")
 with open(project_folder + "/Preprocessing Errors.csv", 'w') as f: 
   write = csv.writer(f) 
   write.writerows(errors) 
+  f.close()
