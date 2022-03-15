@@ -129,9 +129,12 @@ class Results:
     "                   Target   \n"
     "                | Pos | Neg \n"+
     "           -----------------\n"+
-    "            Pos | "+str(self.tp).rjust(2," ")+" | "+str(self.fn).rjust(2," ")+ " \n"+
+    "            Pos | "+str(self.tp).rjust(2," ")+" | "+
+    str(self.fn).rjust(2," ")+ " \n"+
     "Prediction -----------------\n"+
-    "            Neg | "+str(self.fp).rjust(2," ")+" | "+str(self.tn).rjust(2," ")+ " ")
+    "            Neg | "+str(self.fp).rjust(2," ")+" | "+
+    str(self.tn).rjust(2," ")+ " ")
+
     return matrix_string
   
   def results_string(self):
@@ -159,7 +162,8 @@ def one_hot_vector_labels(scalar_labels):
   vector_labels = vector_labels.float()
   return vector_labels
 
-def train_loop(dataloader, model, loss_fn, optimizer, device, cube_size, logger):
+def train_loop(dataloader, model, loss_fn, optimizer, device, cube_size, 
+logger):
   size = len(dataloader.dataset)
   sum_loss = 0
   batches = 0
@@ -181,7 +185,8 @@ def train_loop(dataloader, model, loss_fn, optimizer, device, cube_size, logger)
     # Print results after each batch        
     if batch % 1 == 0:
       loss, current = loss.item(), batch * len(X)
-      logger = log(f"Training Batch {batches:>} loss: {loss:>7f}  [{current:>5d}/{size:>5d}]", 
+      logger = log(f"Training Batch {batches:>} loss: {loss:>7f}  "
+      "[{current:>5d}/{size:>5d}]", 
       logger)
   return sum_loss/batches, logger
 
@@ -291,8 +296,9 @@ class ImageDataset(Dataset):
       mode='constant', constant_values=-1024)
 
       # crop to complete shift
-      image = image[mx_x+cc_shift:self.cube_size+mx_x+cc_shift, mx_yz+ap_shift:self.cube_size+mx_yz+
-      ap_shift, mx_yz+lr_shift:self.cube_size+mx_yz+lr_shift]
+      image = image[mx_x+cc_shift:self.cube_size+mx_x+cc_shift, 
+      mx_yz+ap_shift:self.cube_size+mx_yz+ap_shift, mx_yz+
+      lr_shift:self.cube_size+mx_yz+lr_shift]
 
     if self.rotations and random.random()<0.5:
       # taking implementation from my 3DSegmentationNetwork which can be applied
@@ -413,7 +419,8 @@ class CNN(nn.Module):
 
 class customWriter(SummaryWriter):
   # Custom tensorboard writer class
-  def __init__(self, log_dir, batch_size, epoch, num_classes, dataloader, cube_size):
+  def __init__(self, log_dir, batch_size, epoch, num_classes, dataloader, 
+  cube_size):
     super(customWriter, self).__init__()
     self.log_dir = log_dir
     self.batch_size = batch_size
@@ -452,8 +459,8 @@ class customWriter(SummaryWriter):
     """
     fig = plt.figure(figsize=(24, 24))#changed from (24,24)
     for idx in np.arange(self.batch_size):
-      ax = fig.add_subplot(self.batch_size // 2, self.batch_size // 2, self.batch_size // 2,
-                          idx+1, label='images')
+      ax = fig.add_subplot(self.batch_size // 2, self.batch_size // 2, 
+      self.batch_size // 2, idx+1, label='images')
       ax.imshow(prediction[idx, 0].cpu().numpy(
       ), cmap='viridis')
       
@@ -465,7 +472,8 @@ class customWriter(SummaryWriter):
     size = len(dataloader.dataset)
     
     for batch, (X, y) in enumerate(dataloader):
-      X = reshape(X, (X.shape[0],1,self.cube_size,self.cube_size,self.cube_size))
+      X = reshape(X, (X.shape[0],1,self.cube_size,self.cube_size,
+      self.cube_size))
       X = X.float()
       X = X.to(device)
       X = X.cpu()
@@ -498,7 +506,9 @@ class customWriter(SummaryWriter):
     pred, target = prediction, target
     for class_ in range(self.num_classes + 1):
       class_pred, class_tgt = torch.where(
-        target == class_, pred, torch.tensor([0], dtype=torch.float32).cuda()),  torch.where(target == class_, target, torch.tensor([0], dtype=torch.float32).cuda())
+        target == class_, pred, torch.tensor([0], dtype=torch.float32).cuda()),  
+        torch.where(target == class_, target, torch.tensor([0], 
+        dtype=torch.float32).cuda())
 
       #class_pred, class_tgt = pred[target == class_], target[target == class_] 
       if alpha is not None:
@@ -512,7 +522,8 @@ class customWriter(SummaryWriter):
 
   def write_class_loss(self):
     for class_ in range(self.num_classes+1):
-      self.add_scalar(f'Per Class loss for class {class_}', np.mean(self.class_loss[class_]), self.epoch)
+      self.add_scalar(f'Per Class loss for class {class_}', 
+      np.mean(self.class_loss[class_]), self.epoch)
 
 logger = log(" ".join(sys.argv), logger)
 
@@ -615,8 +626,8 @@ cube_size=image_dimension)
 # Define model and send to device
 model = CNN().to(device)
 logger = log(model.__repr__(), logger)
-logger = log(str(summary(model, (batch_size, 1, image_dimension, image_dimension, 
-image_dimension), verbose=0)), logger)
+logger = log(str(summary(model, (batch_size, 1, image_dimension, 
+image_dimension, image_dimension), verbose=0)), logger)
 logger = log(double_underline, logger)
 
 # Define loss function and optimizer and send to device
@@ -629,7 +640,8 @@ train_dataloader = DataLoader(training_data, batch_size, shuffle=True)
 validate_dataloader = DataLoader(validation_data, batch_size, shuffle=True)
 test_dataloader = DataLoader(test_data, batch_size, shuffle=True)
 
-writer = customWriter("/data/James_Anna/Tensorboard/", 2, 0, 1, train_dataloader, image_dimension)
+writer = customWriter("/data/James_Anna/Tensorboard/", 2, 0, 1, 
+train_dataloader, image_dimension)
 
 # Training
 train_losses = [[],[]]
@@ -641,7 +653,8 @@ for t in range(epochs):
   logger = log(f"Epoch {t+1}\n" + underline, logger)
   train_loss, logger = train_loop(train_dataloader, model, loss_fn, optimizer, 
   device, image_dimension, logger)
-  validate_loss, predictions, targets = validate_loop(validate_dataloader, model, loss_fn, device,
+  validate_loss, predictions, targets = validate_loop(validate_dataloader, 
+  model, loss_fn, device,
   image_dimension)
 
   val_results = Results(predictions,targets)
@@ -659,8 +672,8 @@ for t in range(epochs):
   loss = loss_plot(train_losses, validate_losses)
   plt.savefig(project_folder + "/" + subfolder + "/Results/" + str(date) + 
   "/loss.png")
-  # writer.add_scalar('Train Loss', train_loss, t)
-  # writer.add_scalar('Validate Loss', validate_loss, t)
+  writer.add_scalar('Train Loss', train_loss, t)
+  writer.add_scalar('Validate Loss', validate_loss, t)
   # plot 3d plots here
   # writer.plot_tumour(dataloader = train_dataloader, tag=tag)
 writer.close()
@@ -680,6 +693,7 @@ with open(project_folder + "/" + subfolder + "/Results/" + date +
   f.write(logger)
   f.close()
 
+# Move runs file to main storage then delete original
 if not os.path.exists(project_folder + "/" + subfolder + "/Tensorboard"):
   os.makedirs(project_folder + "/" + subfolder + "/Tensorboard")
 
