@@ -186,7 +186,7 @@ logger):
     if batch % 1 == 0:
       loss, current = loss.item(), batch * len(X)
       logger = log(f"Training Batch {batches:>} loss: {loss:>7f}  "
-      "[{current:>5d}/{size:>5d}]", 
+      f"[{current:>5d}/{size:>5d}]", 
       logger)
   return sum_loss/batches, logger
 
@@ -505,9 +505,9 @@ class customWriter(SummaryWriter):
     #pred, target = prediction.cpu().numpy(), target.cpu().numpy()
     pred, target = prediction, target
     for class_ in range(self.num_classes + 1):
-      class_pred, class_tgt = torch.where(
-        target == class_, pred, torch.tensor([0], dtype=torch.float32).cuda()),  
-        torch.where(target == class_, target, torch.tensor([0], 
+      class_pred = torch.where(target == class_, pred, torch.tensor([0], 
+      dtype=torch.float32).cuda())
+      class_tgt = torch.where(target == class_, target, torch.tensor([0], 
         dtype=torch.float32).cuda())
 
       #class_pred, class_tgt = pred[target == class_], target[target == class_] 
@@ -555,7 +555,7 @@ logger = log(f'Using {device} device', logger)
 # Open the metadata.csv file, convert to an array, and remove column headers
 metadata_file = open(project_folder + "/metadata.csv")
 metadata = np.loadtxt(metadata_file, dtype="str", delimiter=",")
-metadata = metadata[1:30][:]
+metadata = metadata[1:][:]
 
 # Find the size of the images being read in
 image_sitk = sitk.ReadImage(project_folder + "/" + subfolder + "/Images/" + 
