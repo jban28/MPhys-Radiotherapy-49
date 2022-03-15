@@ -3,6 +3,7 @@ import os
 import sys
 import torch
 import random
+import shutil
 import numpy as np
 import torchvision
 import SimpleITK as sitk
@@ -536,14 +537,14 @@ logger = log(double_underline, logger)
 logger = log(date, logger)
 
 # Connect to GPU if available and move model and loss function across
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
+device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 logger = log(f'Using {device} device', logger)
 
 # Find the original metadata for the patients 
 # Open the metadata.csv file, convert to an array, and remove column headers
 metadata_file = open(project_folder + "/metadata.csv")
 metadata = np.loadtxt(metadata_file, dtype="str", delimiter=",")
-metadata = metadata[1:][:]
+metadata = metadata[1:30][:]
 
 # Find the size of the images being read in
 image_sitk = sitk.ReadImage(project_folder + "/" + subfolder + "/Images/" + 
@@ -628,7 +629,7 @@ train_dataloader = DataLoader(training_data, batch_size, shuffle=True)
 validate_dataloader = DataLoader(validation_data, batch_size, shuffle=True)
 test_dataloader = DataLoader(test_data, batch_size, shuffle=True)
 
-writer = customWriter(project_folder, 2, 0, 1, train_dataloader, image_dimension)
+writer = customWriter("/data/James_Anna/Tensorboard/", 2, 0, 1, train_dataloader, image_dimension)
 
 # Training
 train_losses = [[],[]]
@@ -672,8 +673,21 @@ test_results = Results(test_predictions,test_targets)
 
 logger = log(double_underline + "\nTesting\n" + double_underline, logger)
 logger = log(test_results.results_string(), logger)
+logger = log(double_underline, logger)
 
 with open(project_folder + "/" + subfolder + "/Results/" + date +
 '/Summary.txt', 'w') as f:
   f.write(logger)
   f.close()
+
+if not os.path.exists(project_folder + "/" + subfolder + "/Tensorboard"):
+  os.makedirs(project_folder + "/" + subfolder + "/Tensorboard")
+
+runs_files = os.listdir("runs")
+for each in runs_files:
+  if not os.path.exists(project_folder + "/" + subfolder + "/Tensorboard/" + 
+  each):
+    shutil.copytree("runs/"+each, project_folder + "/" + subfolder + 
+    "/Tensorboard/" + each)
+
+shutil.rmtree("runs")
