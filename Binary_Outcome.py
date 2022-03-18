@@ -1,3 +1,6 @@
+# commands to run from (py39) jd_bannister28_gmail_com@mphys-vm-http:~/MPhys-Radiotherapy-49$
+# python Binary_Outcome.py /data/James_Anna crop_2022_03_01-12_00_12 {outcome type} {day to check for outcome} {epochs} {batch size} {learning rate}
+
 from cmath import sqrt
 import os
 import sys
@@ -409,6 +412,41 @@ class CNN(nn.Module):
       nn.Conv3d(out5, out6, 1, 1),
       nn.BatchNorm3d(out6),
       nn.LeakyReLU(inplace=True),
+      nn.AvgPool3d(2)
+    )
+
+  def forward(self, x):
+    x = self.cnn_layers(x)
+    x = x.view(x.size(0), -1)
+    return x
+
+class CNN2(nn.Module):
+  def __init__(self):
+    super(CNN2, self).__init__()
+    self.cnn_layers = nn.Sequential(
+      nn.Conv3d(1,32,3,1),
+      nn.LeakyReLU(inplace=True),
+      nn.MaxPool3d(kernel_size=2, stride=2),
+      nn.BatchNorm3d(32),
+
+      nn.Conv3d(32,64,3,1),
+      nn.LeakyReLU(inplace=True),
+      nn.MaxPool3d(kernel_size=2, stride=2),
+      nn.BatchNorm3d(64),
+
+      nn.Conv3d(64,32,3,1),
+      nn.LeakyReLU(inplace=True),
+      nn.MaxPool3d(kernel_size=2, stride=2),
+      nn.BatchNorm3d(32),
+
+      nn.Conv3d(32,16,3,1),
+      nn.LeakyReLU(inplace=True),
+      nn.MaxPool3d(kernel_size=2, stride=2),
+      nn.BatchNorm3d(16),
+      
+      nn.Conv3d(16,2,3,1),
+      nn.LeakyReLU(inplace=True),
+      nn.BatchNorm3d(2),
       nn.AvgPool3d(2)
     )
 
