@@ -232,7 +232,7 @@ def validate_loop(dataloader, model, loss_fn, device, cube_size):
         all_predictions[i+j] = predictions[j]
         all_targets[i+j] = targets[j]
         j += 1
-      i += 1
+      i += len(predictions)
 
   validate_loss /= num_batches
   print(all_predictions)
@@ -264,7 +264,7 @@ def test_loop(dataloader, model, device, cube_size):
         all_predictions[i+j] = predictions[j]
         all_targets[i+j] = targets[j]
         j += 1
-      i += 1
+      i += len(predictions)
 
   test_loss /= num_batches
   return test_loss, all_predictions, all_targets
