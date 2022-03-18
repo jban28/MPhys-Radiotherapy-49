@@ -124,7 +124,7 @@ class Results:
     return correct
   
   def conf_matrix(self):
-    matrix = [[self.tp,self.fn],[self.fp, self.tn]]
+    matrix = [[self.tp,self.fp],[self.fn, self.tn]]
     return matrix
   
   def conf_matrix_str(self):
@@ -133,9 +133,9 @@ class Results:
     "                | Pos | Neg \n"+
     "           -----------------\n"+
     "            Pos | "+str(self.tp).rjust(2," ")+" | "+
-    str(self.fn).rjust(2," ")+ " \n"+
+    str(self.fp).rjust(2," ")+ " \n"+
     "Prediction -----------------\n"+
-    "            Neg | "+str(self.fp).rjust(2," ")+" | "+
+    "            Neg | "+str(self.fn).rjust(2," ")+" | "+
     str(self.tn).rjust(2," ")+ " ")
 
     return matrix_string
@@ -166,7 +166,7 @@ def one_hot_vector_labels(scalar_labels):
   return vector_labels
 
 def train_loop(dataloader, model, loss_fn, optimizer, device, cube_size, 
-logger):
+logger, batch_size):
   size = len(dataloader.dataset)
   sum_loss = 0
   batches = 0
@@ -187,7 +187,7 @@ logger):
 
     # Print results after each batch        
     if batch % 1 == 0:
-      loss, current = loss.item(), batch * len(X)
+      loss, current = loss.item(), batch * batch_size
       logger = log(f"Training Batch {batches:>} loss: {loss:>7f}  "
       f"[{current:>5d}/{size:>5d}]", 
       logger)
@@ -209,11 +209,16 @@ def validate_loop(dataloader, model, loss_fn, device, cube_size):
       
       # Find outputs from model for each image in batch X
       pred = model(X)
+      print(pred)
+      print(y)
 
       # Convert model predictions to from vector of 2 floats to 1 or 0 and
       # targets from 1 hot vector to 1 or 0
       _,predictions = torch.max(pred , 1)
       _,targets = torch.max(y, 1)
+
+      print(predictions)
+      print(targets)
 
       # Add loss for this batch (divided by number of batches later to return
       # average)
@@ -230,6 +235,8 @@ def validate_loop(dataloader, model, loss_fn, device, cube_size):
       i += 1
 
   validate_loss /= num_batches
+  print(all_predictions)
+  print(all_targets)
   return validate_loss, all_predictions, all_targets
 
 def test_loop(dataloader, model, device, cube_size):
@@ -690,7 +697,7 @@ logger = log(double_underline, logger)
 for t in range(epochs):
   logger = log(f"Epoch {t+1}\n" + underline, logger)
   train_loss, logger = train_loop(train_dataloader, model, loss_fn, optimizer, 
-  device, image_dimension, logger)
+  device, image_dimension, logger, batch_size)
   validate_loss, predictions, targets = validate_loop(validate_dataloader, 
   model, loss_fn, device,
   image_dimension)
