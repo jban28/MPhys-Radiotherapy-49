@@ -1,6 +1,5 @@
 # commands to run from (py39) jd_bannister28_gmail_com@mphys-vm-http:~/MPhys-Radiotherapy-49$
 # python Binary_Outcome.py /data/James_Anna crop_2022_03_01-12_00_12 {outcome type} {day to check for outcome} {epochs} {batch size} {learning rate}
-# test
 
 from cmath import sqrt
 import os
