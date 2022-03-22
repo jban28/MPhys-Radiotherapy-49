@@ -12,8 +12,8 @@ import torchvision
 import SimpleITK as sitk
 import matplotlib.pyplot as plt
 
+
 from torch import nn
-from cmath import sqrt
 from torch import reshape
 from torchinfo import summary
 from datetime import datetime
