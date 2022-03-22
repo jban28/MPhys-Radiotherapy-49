@@ -12,8 +12,8 @@ import torchvision
 import SimpleITK as sitk
 import matplotlib.pyplot as plt
 
-
 from torch import nn
+from cmath import sqrt
 from torch import reshape
 from torchinfo import summary
 from datetime import datetime
@@ -419,41 +419,6 @@ class CNN(nn.Module):
       nn.Conv3d(out5, out6, 1, 1),
       nn.BatchNorm3d(out6),
       nn.LeakyReLU(inplace=True),
-      nn.AvgPool3d(2)
-    )
-
-  def forward(self, x):
-    x = self.cnn_layers(x)
-    x = x.view(x.size(0), -1)
-    return x
-
-class CNN2(nn.Module):
-  def __init__(self):
-    super(CNN2, self).__init__()
-    self.cnn_layers = nn.Sequential(
-      nn.Conv3d(1,32,3,1),
-      nn.LeakyReLU(inplace=True),
-      nn.MaxPool3d(kernel_size=2, stride=2),
-      nn.BatchNorm3d(32),
-
-      nn.Conv3d(32,64,3,1),
-      nn.LeakyReLU(inplace=True),
-      nn.MaxPool3d(kernel_size=2, stride=2),
-      nn.BatchNorm3d(64),
-
-      nn.Conv3d(64,32,3,1),
-      nn.LeakyReLU(inplace=True),
-      nn.MaxPool3d(kernel_size=2, stride=2),
-      nn.BatchNorm3d(32),
-
-      nn.Conv3d(32,16,3,1),
-      nn.LeakyReLU(inplace=True),
-      nn.MaxPool3d(kernel_size=2, stride=2),
-      nn.BatchNorm3d(16),
-      
-      nn.Conv3d(16,2,3,1),
-      nn.LeakyReLU(inplace=True),
-      nn.BatchNorm3d(2),
       nn.AvgPool3d(2)
     )
 
