@@ -43,7 +43,7 @@ logger, batch_size):
       f"[{current:>5d}/{size:>5d}]")
   return sum_loss/batches, logger
 
-def test_loop(dataloader, model, device, cube_size):
+def test_loop(dataloader, model, loss_fn, device, cube_size):
   size = len(dataloader.dataset)
   num_batches = len(dataloader)
   test_loss = 0
@@ -89,16 +89,11 @@ def validate_loop(dataloader, model, loss_fn, device, cube_size):
       
       # Find outputs from model for each image in batch X
       pred = model(X)
-      print(pred)
-      print(y)
 
       # Convert model predictions to from vector of 2 floats to 1 or 0 and
       # targets from 1 hot vector to 1 or 0
       _,predictions = torch.max(pred , 1)
       _,targets = torch.max(y, 1)
-
-      print(predictions)
-      print(targets)
 
       # Add loss for this batch (divided by number of batches later to return
       # average)

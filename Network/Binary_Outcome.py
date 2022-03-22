@@ -11,14 +11,13 @@ import SimpleITK as sitk
 import matplotlib.pyplot as plt
 
 from torch import nn
-from cmath import sqrt
 from Networks import CNN
 from torchinfo import summary
 from datetime import datetime
-from Results import log, Results
 from ImageDataset import ImageDataset
 from Tensorboard import customWriter
 from torch.utils.data import DataLoader
+from Results import log, Results, loss_plot
 from outcomes import split, outcome_str_from_int
 from Network_Loops import train_loop, validate_loop, test_loop
 
@@ -162,6 +161,7 @@ for t in range(epochs):
   image_dimension)
 
   val_results = Results(predictions,targets)
+  print(val_results.conf_matrix())
 
   logger = log(underline, logger)
   logger = log(val_results.results_string(), logger)
@@ -174,17 +174,18 @@ for t in range(epochs):
 
   # Plot the losses and save the plot in the results folder
   loss = loss_plot(train_losses, validate_losses)
-  plt.savefig(project_folder + "/" + subfolder + "/Results/" + str(date) + 
-  "/loss.png")
-  writer.add_scalar('Train Loss', train_loss, t)
-  writer.add_scalar('Validate Loss', validate_loss, t)
+  # plt.savefig(project_folder + "/" + subfolder + "/Results/" + str(date) + 
+  # "/loss.png")
+  writer.add_scalar("Train Loss", train_loss, t)
+  writer.add_scalar("Validate Loss", validate_loss, t)
+  writer.add_scalar("Validation Accuracy", Results.accuracy(), t)
   # plot 3d plots here
   # writer.plot_tumour(dataloader = train_dataloader, tag=tag)
 writer.close()
 
 # Testing
 test_loss, test_predictions, test_targets = test_loop(test_dataloader, model, 
-device, image_dimension)
+loss_fn, device, image_dimension)
 
 test_results = Results(test_predictions,test_targets)
 
@@ -192,18 +193,18 @@ logger = log(double_underline + "\nTesting\n" + double_underline, logger)
 logger = log(test_results.results_string(), logger)
 logger = log(double_underline, logger)
 
-with open(project_folder + "/" + subfolder + "/Results/" + date +
-'/Summary.txt', 'w') as f:
-  f.write(logger)
-  f.close()
+# with open(project_folder + "/" + subfolder + "/Results/" + date +
+# '/Summary.txt', 'w') as f:
+#   f.write(logger)
+#   f.close()
 
 # Move runs file to main storage then delete original
-if not os.path.exists(project_folder + "/" + subfolder + "/Tensorboard"):
-  os.makedirs(project_folder + "/" + subfolder + "/Tensorboard")
+# if not os.path.exists(project_folder + "/" + subfolder + "/Tensorboard"):
+#   os.makedirs(project_folder + "/" + subfolder + "/Tensorboard")
 
-runs_files = os.listdir("runs")
-for each in runs_files:
-  if not os.path.exists(project_folder + "/" + subfolder + "/Tensorboard/" + 
-  each):
-    shutil.copytree("runs/"+each, project_folder + "/" + subfolder + 
-    "/Tensorboard/" + each)
+# runs_files = os.listdir("runs")
+# for each in runs_files:
+#   if not os.path.exists(project_folder + "/" + subfolder + "/Tensorboard/" + 
+#   each):
+#     shutil.copytree("runs/"+each, project_folder + "/" + subfolder + 
+#     "/Tensorboard/" + each)

@@ -1,3 +1,8 @@
+import sklearn
+from cmath import sqrt
+import matplotlib.pyplot as plt
+from sklearn.metrics import confusion_matrix
+
 def log(item, log_string):
   print(item)
   log_string += "\n"
@@ -59,9 +64,8 @@ class Results:
     return correct
   
   def conf_matrix(self):
-    matrix = [[self.tp,self.fp],[self.fn, self.tn]]
-    return matrix
-  
+    return sklearn.metrics.confusion_matrix(self.targets, self.predictions)
+
   def conf_matrix_str(self):
     matrix_string = str(
     "                   Target   \n"
