@@ -110,6 +110,4 @@ def validate_loop(dataloader, model, loss_fn, device, cube_size):
       i += len(predictions)
 
   validate_loss /= num_batches
-  print(all_predictions)
-  print(all_targets)
   return validate_loss, all_predictions, all_targets

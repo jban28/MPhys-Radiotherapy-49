@@ -55,7 +55,7 @@ class Results:
     else:
       self.specificity = 0
 
-    self.G_mean = sqrt(self.sensitivity*self.specificity)
+    self.G_mean = sqrt(self.sensitivity*self.specificity).real
 
   def accuracy(self):
     # Compute accuracy of predictions as fraction
@@ -64,6 +64,7 @@ class Results:
     return correct
   
   def conf_matrix(self):
+    print(sklearn.metrics.confusion_matrix(self.targets, self.predictions))
     return sklearn.metrics.confusion_matrix(self.targets, self.predictions)
 
   def conf_matrix_str(self):

@@ -1,3 +1,7 @@
+import torch
+import itertools
+import numpy as np
+import matplotlib.pyplot as plt
 from torch.utils.tensorboard import SummaryWriter
 
 class customWriter(SummaryWriter):
@@ -107,3 +111,29 @@ class customWriter(SummaryWriter):
     for class_ in range(self.num_classes+1):
       self.add_scalar(f'Per Class loss for class {class_}', 
       np.mean(self.class_loss[class_]), self.epoch)
+
+  def plot_confusion_matrix(self, cm, class_names):
+    #function taken from https://towardsdatascience.com/exploring-confusion-matrix-evolution-on-tensorboard-e66b39f4ac12
+    print(type(cm))
+    figure = plt.figure(figsize=(8,8))
+    plt.imshow(cm, interpolation="nearest", cmap=plt.cm.Blues)
+    plt.title("Confusion Matrix")
+    plt.colorbar()
+    tick_marks = np.arange(len(class_names))
+    plt.xticks(tick_marks, class_names, rotation=45)
+    plt.yticks(tick_marks, class_names)
+
+    #Normalize confusion matrix
+    cm = np.around(cm.astype('float')/cm.sum(axis=1)[:,np.newaxis],decimals=2)
+
+    # Use white text if squares are dark; otherwise black.
+    threshold = cm.max() / 2.
+
+    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+      color = "white" if cm[i, j] > threshold else "black"
+      plt.text(j, i, cm[i, j], horizontalalignment="center", color=color)
+
+    plt.tight_layout()
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+    self.add_figure(f"Confusion Matrix at epoch {self.epoch}", figure)
