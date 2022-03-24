@@ -11,7 +11,7 @@ import SimpleITK as sitk
 import matplotlib.pyplot as plt
 
 from torch import nn
-from Networks import CNN
+from Networks import CNN, ResNet
 from torchinfo import summary
 from datetime import datetime
 from ImageDataset import ImageDataset
@@ -102,7 +102,8 @@ test_data = ImageDataset(test_outcomes, project_folder + "/" + subfolder +
 cube_size=image_dimension)
 
 # Define model and send to device
-model = CNN().to(device)
+#model = CNN().to(device)
+model = ResNet.generate_model(10).to(device)
 
 # Define loss function and optimizer and send to device
 loss_fn = nn.BCEWithLogitsLoss(torch.tensor([(1/pos_weights), 
