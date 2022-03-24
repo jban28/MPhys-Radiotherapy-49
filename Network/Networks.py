@@ -160,7 +160,7 @@ class ResNet(nn.Module):
                  block_inplanes,
                  n_input_channels=1,
                  conv1_t_size=7,
-                 conv1_t_stride=1,
+                 conv1_t_stride=2,
                  no_max_pool=False,
                  shortcut_type='B',
                  widen_factor=1.0,
@@ -174,9 +174,9 @@ class ResNet(nn.Module):
 
         self.conv1 = nn.Conv3d(n_input_channels,
                                self.in_planes,
-                               kernel_size=(conv1_t_size, 7, 7),
-                               stride=(conv1_t_stride, 2, 2),
-                               padding=(conv1_t_size // 2, 3, 3),
+                               kernel_size=(conv1_t_size, conv1_t_size, conv1_t_size),
+                               stride=(conv1_t_stride, conv1_t_stride, conv1_t_stride),
+                               padding=(conv1_t_size // 2, conv1_t_size // 2, conv1_t_size // 2),
                                bias=False)
         self.bn1 = nn.BatchNorm3d(self.in_planes)
         self.relu = nn.ReLU(inplace=True)

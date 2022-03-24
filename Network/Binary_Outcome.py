@@ -105,6 +105,9 @@ cube_size=image_dimension)
 #model = CNN().to(device)
 model = ResNet.generate_model(10).to(device)
 
+print(model)
+print(summary(model, (batch_size, 1, image_dimension, 
+image_dimension, image_dimension), verbose=0))
 # Define loss function and optimizer and send to device
 loss_fn = nn.BCEWithLogitsLoss(torch.tensor([(1/pos_weights), 
 pos_weights])).to(device)
@@ -118,14 +121,11 @@ test_dataloader = DataLoader(test_data, batch_size, shuffle=True)
 writer = customWriter("/data/James_Anna/Tensorboard/", 2, 0, 1, 
 train_dataloader, image_dimension)
 
-writer.add_text("Input", " ".join(sys.argv))
+info_string = (f"Network: {model.name}  \nBinary Outcome: "
+f"{outcome_str_from_int(outcome_type)}  \nCheck for outcome on day: {check_day}"
+f"  \n  Batch Size: {batch_size}  \nLearning Rate: {learning_rate}")
 
-# Define string for outcome description
-outcome_description = ("Binary outcome; " + outcome_str_from_int(outcome_type) +   
-" on/before day " + str(check_day))
-
-writer.add_text("Outcome", outcome_description)
-writer.add_text("Network", model.name)
+writer.add_text("Info", info_string)
 
 # Training
 train_losses = [[],[]]
@@ -174,11 +174,6 @@ test_results = Results(test_predictions,test_targets)
 writer.plot_confusion_matrix(test_results.conf_matrix(), 
 ["No Recurrence", "Recurrence"], "Conf. matrix, testing")
 
-h_params = {
-  "LR":learning_rate
-}
-
 writer.add_text("Test Results", test_results.results_string())
-writer.add_hparams(h_params, test_results.results_dict())
 
 writer.close()
