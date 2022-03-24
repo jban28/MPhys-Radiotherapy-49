@@ -3,6 +3,7 @@ from torch import nn
 class CNN(nn.Module):
   def __init__(self):
     super(CNN, self).__init__()
+    self.name = "CNN"
     out1 = 32
     out2 = 64
     out3 = 128

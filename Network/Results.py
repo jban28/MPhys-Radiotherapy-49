@@ -64,29 +64,14 @@ class Results:
     return correct
   
   def conf_matrix(self):
-    print(sklearn.metrics.confusion_matrix(self.targets, self.predictions))
     return sklearn.metrics.confusion_matrix(self.targets, self.predictions)
-
-  def conf_matrix_str(self):
-    matrix_string = str(
-    "                   Target   \n"
-    "                | Pos | Neg \n"+
-    "           -----------------\n"+
-    "            Pos | "+str(self.tp).rjust(2," ")+" | "+
-    str(self.fp).rjust(2," ")+ " \n"+
-    "Prediction -----------------\n"+
-    "            Neg | "+str(self.fn).rjust(2," ")+" | "+
-    str(self.tn).rjust(2," ")+ " ")
-
-    return matrix_string
   
   def results_string(self):
     return str(
     f"Accuracy:    {100*self.accuracy():>.2f}%" +  
-    f"\nSensitivity: {self.sensitivity:>.2f}" +
-    f"\nSpecificity: {self.specificity:>.2f}" + 
-    f"\nPrecision:   {self.precision:>.2f}" + 
-    f"\nG-mean:      {self.G_mean:>.2f}" + 
-    f"\nF1 score:    {self.F1_measure:>.2f}" + "\n" +
-    self.conf_matrix_str()
+    f"  \nSensitivity: {self.sensitivity:>.2f}" +
+    f"  \nSpecificity: {self.specificity:>.2f}" + 
+    f"  \nPrecision:   {self.precision:>.2f}" + 
+    f"  \nG-mean:      {self.G_mean:>.2f}" + 
+    f"  \nF1 score:    {self.F1_measure:>.2f}"
     )

@@ -13,8 +13,7 @@ def one_hot_vector_labels(scalar_labels):
   vector_labels = vector_labels.float()
   return vector_labels
 
-def train_loop(dataloader, model, loss_fn, optimizer, device, cube_size, 
-logger, batch_size):
+def train_loop(dataloader, model, loss_fn, optimizer, device, cube_size, batch_size):
   size = len(dataloader.dataset)
   sum_loss = 0
   batches = 0
@@ -36,12 +35,9 @@ logger, batch_size):
     # Print results after each batch        
     if batch % 1 == 0:
       loss, current = loss.item(), batch * batch_size
-      # logger = log(f"Training Batch {batches:>} loss: {loss:>7f}  "
-      # f"[{current:>5d}/{size:>5d}]", 
-      # logger)
-      print(f"Training Batch {batches:>} loss: {loss:>7f}  "
+      print(f"        Training Batch {batches:>} loss: {loss:>7f}  "
       f"[{current:>5d}/{size:>5d}]")
-  return sum_loss/batches, logger
+  return sum_loss/batches
 
 def test_loop(dataloader, model, loss_fn, device, cube_size):
   size = len(dataloader.dataset)

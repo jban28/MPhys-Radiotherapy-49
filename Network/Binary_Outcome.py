@@ -22,12 +22,6 @@ from outcomes import split, outcome_str_from_int
 from Network_Loops import train_loop, validate_loop, test_loop
 
 tag = 0
-logger = ""
-underline = ("-----------------------------------------------------------------"
-"-------------------------")
-double_underline = ("=========================================================="
-"================================")
-
 
 # Define the location of the data using system inputs
 project_folder = sys.argv[1] 
@@ -37,16 +31,6 @@ check_day = int(sys.argv[4])
 epochs = int(sys.argv[5])
 batch_size = int(sys.argv[6])
 learning_rate = float(sys.argv[7])
-
-# Create a folder for the results if one does not already exist
-if not os.path.exists(project_folder + "/" + subfolder + "/Results"):
-  os.makedirs(project_folder + "/" + subfolder + "/Results")
-
-# Make a subfolder within the Results folder to store the current set of results
-date = datetime.now().strftime("%Y_%m_%d/%H_%M_%S")
-os.makedirs(project_folder + "/" + subfolder + "/Results/" + date)
-
-logger = log(double_underline, logger)
 
 # Connect to GPU if available and move model and loss function across
 device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
@@ -119,10 +103,6 @@ cube_size=image_dimension)
 
 # Define model and send to device
 model = CNN().to(device)
-logger = log(model.__repr__(), logger)
-logger = log(str(summary(model, (batch_size, 1, image_dimension, 
-image_dimension, image_dimension), verbose=0)), logger)
-logger = log(double_underline, logger)
 
 # Define loss function and optimizer and send to device
 loss_fn = nn.BCEWithLogitsLoss(torch.tensor([(1/pos_weights), 
@@ -144,31 +124,27 @@ outcome_description = ("Binary outcome; " + outcome_str_from_int(outcome_type) +
 " on/before day " + str(check_day))
 
 writer.add_text("Outcome", outcome_description)
+writer.add_text("Network", model.name)
 
 # Training
 train_losses = [[],[]]
 validate_losses = [[],[]]
-
-logger = log("Training", logger)
-logger = log(double_underline, logger)
 for t in range(epochs):
   # plot 3d plots here
-  writer.plot_tumour(dataloader = train_dataloader, tag=tag)
-
-  
-  logger = log(f"Epoch {t+1}\n" + underline, logger)
-  train_loss, logger = train_loop(train_dataloader, model, loss_fn, optimizer, 
-  device, image_dimension, logger, batch_size)
+  writer.epoch = t+1
+  # writer.plot_tumour(dataloader = train_dataloader, tag=tag)
+  print(f"Epoch {t+1}")
+  print("    Training")
+  train_loss = train_loop(train_dataloader, model, loss_fn, optimizer, 
+  device, image_dimension, batch_size)
+  print("    Validation")
   validate_loss, predictions, targets = validate_loop(validate_dataloader, 
   model, loss_fn, device,
   image_dimension)
 
   val_results = Results(predictions,targets)
-  writer.plot_confusion_matrix(val_results.conf_matrix(), ["Negative", "Positve"])
-
-  logger = log(underline, logger)
-  logger = log(val_results.results_string(), logger)
-  logger = log(double_underline, logger)
+  writer.plot_confusion_matrix(val_results.conf_matrix(), 
+  ["No Recurrence", "Recurrence"], f"Conf. matrix, epoch {t+1}, validation")
 
   train_losses[0].append(t)
   train_losses[1].append(train_loss)
@@ -191,12 +167,12 @@ for t in range(epochs):
 writer.close()
 
 # Testing
+print("Testing")
 test_loss, test_predictions, test_targets = test_loop(test_dataloader, model, 
 loss_fn, device, image_dimension)
 
 test_results = Results(test_predictions,test_targets)
-writer.plot_confusion_matrix(test_results.conf_matrix(), ["Negative", "Positve"])
+writer.plot_confusion_matrix(test_results.conf_matrix(), 
+["No Recurrence", "Recurrence"], "Conf. matrix, testing")
 
-logger = log(double_underline + "\nTesting\n" + double_underline, logger)
-logger = log(test_results.results_string(), logger)
-logger = log(double_underline, logger)
+writer.add_text("Test Results", test_results.results_string())

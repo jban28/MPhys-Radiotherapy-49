@@ -118,7 +118,7 @@ class customWriter(SummaryWriter):
       self.add_scalar(f'Per Class loss for class {class_}', 
       np.mean(self.class_loss[class_]), self.epoch)
 
-  def plot_confusion_matrix(self, cm, class_names):
+  def plot_confusion_matrix(self, cm, class_names, label):
     #function taken from https://towardsdatascience.com/exploring-confusion-matrix-evolution-on-tensorboard-e66b39f4ac12
     print(type(cm))
     figure = plt.figure(figsize=(8,8))
@@ -142,4 +142,4 @@ class customWriter(SummaryWriter):
     plt.tight_layout()
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
-    self.add_figure(f"Confusion Matrix at epoch {self.epoch}", figure)
+    self.add_figure(label, figure)
