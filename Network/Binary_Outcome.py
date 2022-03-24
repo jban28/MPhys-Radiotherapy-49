@@ -176,3 +176,4 @@ writer.plot_confusion_matrix(test_results.conf_matrix(),
 ["No Recurrence", "Recurrence"], "Conf. matrix, testing")
 
 writer.add_text("Test Results", test_results.results_string())
+writer.add_hparam(test_results.results_dict())
