@@ -3,6 +3,7 @@ import itertools
 import numpy as np
 import matplotlib.pyplot as plt
 from torch.utils.tensorboard import SummaryWriter
+from torch import reshape
 
 class customWriter(SummaryWriter):
   # Custom tensorboard writer class
@@ -62,14 +63,14 @@ class customWriter(SummaryWriter):
       X = reshape(X, (X.shape[0],1,self.cube_size,self.cube_size,
       self.cube_size))
       X = X.float()
-      X = X.to(device)
+      #X = X.to(device)
       X = X.cpu()
       X = X.detach().numpy()
       for i in range(X.shape[0]):
         Xbig = X[i,0,:,:,:]
         Xsmall = Xbig[:,:,123]
         ax = fig.add_subplot()
-        ax.imshow(Xsmall, cmap='viridis')
+        ax.imshow(Xsmall.T, cmap='viridis')
         self.add_figure(str(tag), fig)
         tag += 1
 
