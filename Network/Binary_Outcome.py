@@ -184,7 +184,7 @@ for t in range(epochs):
   writer.add_scalar("Validation G-mean", val_results.G_mean, t)
   writer.add_scalar("Validation F1 score", val_results.F1_measure, t)
   # plot 3d plots here
-  # writer.plot_tumour(dataloader = train_dataloader, tag=tag)
+  writer.plot_tumour(dataloader = train_dataloader, tag=tag)
 writer.close()
 
 # Testing
