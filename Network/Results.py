@@ -75,12 +75,3 @@ class Results:
     f"  \nG-mean:      {self.G_mean:>.2f}" + 
     f"  \nF1 score:    {self.F1_measure:>.2f}"
     )
-  def results_dict(self):
-    return({
-    "Accuracy":self.accuracy(),
-    "Sensitivity": self.sensitivity,
-    "Specificity": self.specificity, 
-    "Precision":   self.precision,
-    "G-mean":      self.G_mean, 
-    "F1 score":    self.F1_measure
-    })
