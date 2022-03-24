@@ -152,6 +152,10 @@ validate_losses = [[],[]]
 logger = log("Training", logger)
 logger = log(double_underline, logger)
 for t in range(epochs):
+  # plot 3d plots here
+  writer.plot_tumour(dataloader = train_dataloader, tag=tag)
+
+  
   logger = log(f"Epoch {t+1}\n" + underline, logger)
   train_loss, logger = train_loop(train_dataloader, model, loss_fn, optimizer, 
   device, image_dimension, logger, batch_size)
@@ -183,8 +187,7 @@ for t in range(epochs):
   writer.add_scalar("Validation Precision", val_results.precision, t)
   writer.add_scalar("Validation G-mean", val_results.G_mean, t)
   writer.add_scalar("Validation F1 score", val_results.F1_measure, t)
-  # plot 3d plots here
-  writer.plot_tumour(dataloader = train_dataloader, tag=tag)
+
 writer.close()
 
 # Testing

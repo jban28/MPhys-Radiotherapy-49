@@ -1,9 +1,11 @@
 import torch
+import torchvision
 import itertools
 import numpy as np
 import matplotlib.pyplot as plt
 from torch.utils.tensorboard import SummaryWriter
 from torch import reshape
+
 
 class customWriter(SummaryWriter):
   # Custom tensorboard writer class
@@ -35,7 +37,8 @@ class customWriter(SummaryWriter):
     Args: tag = identifier for plot (string)
           images = input batch (torch.tensor)
     """
-    img_grid = torchvision.utils.make_grid(images, nrow=self.batch_size // 2)
+    # img_grid = torchvision.utils.make_grid(images, nrow=self.batch_size // 2)
+    img_grid = torchvision.utils.make_grid(images, nrow=3)
     self.add_image(tag, img_grid)
 
   def plot_pred(self, tag, prediction):
@@ -65,6 +68,8 @@ class customWriter(SummaryWriter):
       X = X.float()
       #X = X.to(device)
       X = X.cpu()
+      X_test = X[:,:,:,:,123]
+      self.plot_batch('tag', X_test)
       X = X.detach().numpy()
       for i in range(X.shape[0]):
         Xbig = X[i,0,:,:,:]
