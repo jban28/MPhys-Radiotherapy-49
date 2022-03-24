@@ -164,8 +164,6 @@ for t in range(epochs):
   writer.add_scalar("Validation G-mean", val_results.G_mean, t)
   writer.add_scalar("Validation F1 score", val_results.F1_measure, t)
 
-writer.close()
-
 # Testing
 print("Testing")
 test_loss, test_predictions, test_targets = test_loop(test_dataloader, model, 
@@ -175,5 +173,11 @@ test_results = Results(test_predictions,test_targets)
 writer.plot_confusion_matrix(test_results.conf_matrix(), 
 ["No Recurrence", "Recurrence"], "Conf. matrix, testing")
 
+h_params = {
+  "LR":learning_rate
+}
+
 writer.add_text("Test Results", test_results.results_string())
-writer.add_hparams(test_results.results_dict())
+writer.add_hparams(h_params, test_results.results_dict())
+
+writer.close()
