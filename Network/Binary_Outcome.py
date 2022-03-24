@@ -39,7 +39,7 @@ device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 # Open the metadata.csv file, convert to an array, and remove column headers
 metadata_file = open(project_folder + "/metadata.csv")
 metadata = np.loadtxt(metadata_file, dtype="str", delimiter=",")
-metadata = metadata[1:30][:]
+metadata = metadata[1:][:]
 
 # Find the size of the images being read in
 image_sitk = sitk.ReadImage(project_folder + "/" + subfolder + "/Images/" + 
@@ -126,14 +126,16 @@ f"{outcome_str_from_int(outcome_type)}  \nCheck for outcome on day: {check_day}"
 f"  \n  Batch Size: {batch_size}  \nLearning Rate: {learning_rate}")
 
 writer.add_text("Info", info_string)
+print("Plotting Images")
+writer.plot_tumour(dataloader = train_dataloader, tag=tag)
+
 
 # Training
 train_losses = [[],[]]
 validate_losses = [[],[]]
 for t in range(epochs):
-  # plot 3d plots here
+
   writer.epoch = t+1
-  # writer.plot_tumour(dataloader = train_dataloader, tag=tag)
   print(f"Epoch {t+1}")
   print("    Training")
   train_loss = train_loop(train_dataloader, model, loss_fn, optimizer, 

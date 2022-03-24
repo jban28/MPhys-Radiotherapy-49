@@ -30,6 +30,7 @@ class ImageDataset(Dataset):
     image_sitk = sitk.ReadImage(img_path)
     image = sitk.GetArrayFromImage(image_sitk)
     label = self.img_labels[idx][1]
+    patient = self.img_labels[idx][0]
         
     if self.target_transform:
       label = self.target_transform(label)
@@ -71,7 +72,7 @@ class ImageDataset(Dataset):
     # window and levelling
     image = self.windowLevelNormalize(image, level=40, window=50)
 
-    return image, label
+    return image, label, patient
 
   def windowLevelNormalize(self, image, level, window):
     minval = level - window/2

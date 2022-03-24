@@ -17,7 +17,7 @@ def train_loop(dataloader, model, loss_fn, optimizer, device, cube_size, batch_s
   size = len(dataloader.dataset)
   sum_loss = 0
   batches = 0
-  for batch, (X, y) in enumerate(dataloader):
+  for batch, (X, y, patient) in enumerate(dataloader):
     batches += 1
     # Compute prediction and loss
     X = reshape(X, (X.shape[0],1,cube_size,cube_size,cube_size))
@@ -48,7 +48,7 @@ def test_loop(dataloader, model, loss_fn, device, cube_size):
 
   with torch.no_grad():
     i = 0
-    for X, y in dataloader:
+    for X, y, patient in dataloader:
       X = reshape(X, (X.shape[0],1,cube_size,cube_size,cube_size))
       X = X.float().to(device)
       y = one_hot_vector_labels(y).to(device)
@@ -78,7 +78,7 @@ def validate_loop(dataloader, model, loss_fn, device, cube_size):
 
   with torch.no_grad():
     i = 0
-    for X, y in dataloader:
+    for X, y, patient in dataloader:
       X = reshape(X, (X.shape[0],1,cube_size,cube_size,cube_size))
       X = X.float().to(device)
       y = one_hot_vector_labels(y).to(device)
