@@ -49,7 +49,7 @@ image_dimension = image.shape[0]
 
 test_data = ImageDataset(test_outcomes, project_folder + "/" + subfolder + 
 "/Images/", rotate_augment=False, scale_augment=False, flip_augment=False, 
-cube_size=image_dimension)
+shift_augment=False, cube_size=image_dimension)
 
 test_dataloader = DataLoader(test_data, batch_size, shuffle=True)
 
