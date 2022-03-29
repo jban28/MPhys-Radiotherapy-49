@@ -1,11 +1,10 @@
 import os
+import csv
 import sys
 import torch
 import pickle
 import numpy as np
 import SimpleITK as sitk
-import csv
-import datetime
 
 from Results import Results
 from Networks import CNN, ResNet
@@ -79,7 +78,6 @@ test_results.accuracy()
 # check to see if csv file exists and append test results
 
 exists = os.path.isfile('Results.csv')
-now = datetime.datetime.now()
 accuracy = test_results.accuracy()
 sensitivity = test_results.sensitivity
 precision = test_results.precision
@@ -94,7 +92,7 @@ if exists:
     # Append row
     with open('Results.csv', 'a', newline='') as csvfile:
         filewriter = csv.writer(csvfile, delimiter=',')
-        filewriter.writerow([now, accuracy, sensitivity, precision, F1_measure, tp, tn, fp, fn, 
+        filewriter.writerow([date, accuracy, sensitivity, precision, F1_measure, tp, tn, fp, fn, 
                             specificity, G_mean])
 else:
     # Create and then add row

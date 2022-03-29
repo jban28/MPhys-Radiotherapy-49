@@ -35,6 +35,8 @@ epochs = int(sys.argv[5])
 batch_size = int(sys.argv[6])
 learning_rate = float(sys.argv[7])
 
+notes = input("Add any notes for this run")
+
 # Connect to GPU if available and move model and loss function across
 device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
@@ -138,6 +140,9 @@ f"  \n  Batch Size: {batch_size}  \nLearning Rate: {learning_rate}")
 writer.add_text("Info", info_string)
 # print("Plotting Images")
 # writer.plot_tumour(dataloader = train_dataloader, tag=tag)
+
+
+writer.add_text("Notes", notes)
 
 # Training
 train_losses = [[],[]]
