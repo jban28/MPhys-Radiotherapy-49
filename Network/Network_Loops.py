@@ -39,7 +39,7 @@ def train_loop(dataloader, model, loss_fn, optimizer, device, cube_size, batch_s
       f"[{current:>5d}/{size:>5d}]")
   return sum_loss/batches
 
-def test_loop(dataloader, model, loss_fn, device, cube_size):
+def test_loop(dataloader, model, device, cube_size):
   size = len(dataloader.dataset)
   num_batches = len(dataloader)
   test_loss = 0
@@ -57,7 +57,6 @@ def test_loop(dataloader, model, loss_fn, device, cube_size):
       _,predictions = torch.max(pred , 1)
       _,targets = torch.max(y, 1)
 
-      test_loss += loss_fn(pred, y.float()).item()
 
       j = 0
       while j < len(predictions):
@@ -66,8 +65,7 @@ def test_loop(dataloader, model, loss_fn, device, cube_size):
         j += 1
       i += len(predictions)
 
-  test_loss /= num_batches
-  return test_loss, all_predictions, all_targets
+  return all_predictions, all_targets
 
 def validate_loop(dataloader, model, loss_fn, device, cube_size):
   size = len(dataloader.dataset)

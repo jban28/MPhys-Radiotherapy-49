@@ -4,6 +4,7 @@
 import os
 import sys
 import torch
+import pickle
 import shutil
 import numpy as np
 import torchvision
@@ -14,14 +15,16 @@ from torch import nn
 from Networks import CNN, ResNet
 from torchinfo import summary
 from datetime import datetime
-from ImageDataset import ImageDataset
 from Tensorboard import customWriter
+from ImageDataset import ImageDataset
 from torch.utils.data import DataLoader
-from Results import log, Results, loss_plot
+from Results import log, Results
 from outcomes import split, outcome_str_from_int
 from Network_Loops import train_loop, validate_loop, test_loop
 
 tag = 0
+
+date = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
 
 # Define the location of the data using system inputs
 project_folder = sys.argv[1] 
@@ -39,7 +42,7 @@ device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 # Open the metadata.csv file, convert to an array, and remove column headers
 metadata_file = open(project_folder + "/metadata.csv")
 metadata = np.loadtxt(metadata_file, dtype="str", delimiter=",")
-metadata = metadata[1:][:]
+metadata = metadata[1:30][:]
 
 # Find the size of the images being read in
 image_sitk = sitk.ReadImage(project_folder + "/" + subfolder + "/Images/" + 
@@ -87,6 +90,15 @@ train_outcomes = tr_pos + tr_neg
 validation_outcomes = val_pos + val_neg
 test_outcomes = test_pos + test_neg
 
+if not os.path.exists("test_data"):
+  os.mkdir("test_data")
+if not os.path.exists("models"):
+  os.mkdir("models")
+
+test_data_file = open(f"test_data/{date}.pkl", "wb")
+pickle.dump(test_outcomes, test_data_file)
+test_data_file.close()
+
 # Define variable for the weight of positive examples
 pos_weights = len(tr_neg)/len(tr_pos)
 
@@ -97,9 +109,8 @@ cube_size=image_dimension)
 validation_data = ImageDataset(validation_outcomes, project_folder + "/" + 
 subfolder + "/Images/", rotate_augment=False, scale_augment=False, 
 flip_augment=False, cube_size=image_dimension)
-test_data = ImageDataset(test_outcomes, project_folder + "/" + subfolder + 
-"/Images/", rotate_augment=False, scale_augment=False, flip_augment=False, 
-cube_size=image_dimension)
+
+
 
 # Define model and send to device
 model = CNN().to(device)
@@ -116,23 +127,22 @@ optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
 # Build Dataloaders
 train_dataloader = DataLoader(training_data, batch_size, shuffle=True)
 validate_dataloader = DataLoader(validation_data, batch_size, shuffle=True)
-test_dataloader = DataLoader(test_data, batch_size, shuffle=True)
 
 writer = customWriter("/data/James_Anna/Tensorboard/", 2, 0, 1, 
 train_dataloader, image_dimension)
 
-info_string = (f"Network: {model.name}  \nBinary Outcome: "
+info_string = (f"Date: {date}  \nNetwork: {model.name}  \nBinary Outcome: "
 f"{outcome_str_from_int(outcome_type)}  \nCheck for outcome on day: {check_day}"
 f"  \n  Batch Size: {batch_size}  \nLearning Rate: {learning_rate}")
 
 writer.add_text("Info", info_string)
-print("Plotting Images")
-writer.plot_tumour(dataloader = train_dataloader, tag=tag)
-
+# print("Plotting Images")
+# writer.plot_tumour(dataloader = train_dataloader, tag=tag)
 
 # Training
 train_losses = [[],[]]
 validate_losses = [[],[]]
+min_val_loss = 999999999
 for t in range(epochs):
 
   writer.epoch = t+1
@@ -155,9 +165,6 @@ for t in range(epochs):
   validate_losses[1].append(validate_loss)
 
   # Plot the losses and save the plot in the results folder
-  loss = loss_plot(train_losses, validate_losses)
-  # plt.savefig(project_folder + "/" + subfolder + "/Results/" + str(date) + 
-  # "/loss.png")
   writer.add_scalar("Train Loss", train_loss, t)
   writer.add_scalar("Validate Loss", validate_loss, t)
   writer.add_scalar("Validation Accuracy", val_results.accuracy(), t)
@@ -167,15 +174,10 @@ for t in range(epochs):
   writer.add_scalar("Validation G-mean", val_results.G_mean, t)
   writer.add_scalar("Validation F1 score", val_results.F1_measure, t)
 
-# Testing
-print("Testing")
-test_loss, test_predictions, test_targets = test_loop(test_dataloader, model, 
-loss_fn, device, image_dimension)
-
-test_results = Results(test_predictions,test_targets)
-writer.plot_confusion_matrix(test_results.conf_matrix(), 
-["No Recurrence", "Recurrence"], "Conf. matrix, testing")
-
-writer.add_text("Test Results", test_results.results_string())
+  if validate_loss < min_val_loss:
+    min_val_loss = validate_loss
+    torch.save(model.state_dict(), f'models/{date}')
+  else:
+    continue
 
 writer.close()
