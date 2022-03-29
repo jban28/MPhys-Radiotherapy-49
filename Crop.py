@@ -13,7 +13,7 @@ from datetime import datetime
 # Specify root folder for the project, where all images and data will be stored 
 # and where the TCIA file is downloaded to
 project_folder = sys.argv[1]
-padding = sys.argv[2]
+padding = int(sys.argv[2])
 
 date = datetime.now().strftime("%Y_%m_%d-%H_%M_%S")
 
@@ -71,7 +71,7 @@ for patient in patient_data:
 
   # Add padding to mask
   while padding > 0:
-    mask_array = pad_mask(mask_array)
+    mask_array = pad_mask.binary_dilation(mask_array)
     padding -= 1
 
   # Crop image and mask

@@ -21,6 +21,8 @@ from torch.utils.data import DataLoader
 from Results import log, Results
 from outcomes import split, outcome_str_from_int
 from Network_Loops import train_loop, validate_loop, test_loop
+from torch.optim.lr_scheduler import ReduceLROnPlateau
+
 
 tag = 0
 
@@ -121,10 +123,12 @@ model = ResNet.generate_model(10).to(device)
 print(model)
 print(summary(model, (batch_size, 1, image_dimension, 
 image_dimension, image_dimension), verbose=0))
+
 # Define loss function and optimizer and send to device
 loss_fn = nn.BCEWithLogitsLoss(torch.tensor([(1/pos_weights), 
 pos_weights])).to(device)
 optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
+scheduler = ReduceLROnPlateau(optimizer, 'min', patience = 5)
 
 # Build Dataloaders
 train_dataloader = DataLoader(training_data, batch_size, shuffle=True)
@@ -157,8 +161,8 @@ for t in range(epochs):
   device, image_dimension, batch_size)
   print("    Validation")
   validate_loss, predictions, targets = validate_loop(validate_dataloader, 
-  model, loss_fn, device,
-  image_dimension)
+  model, loss_fn, device, image_dimension)
+  scheduler.step(validate_loss)
 
   val_results = Results(predictions,targets)
   writer.plot_confusion_matrix(val_results.conf_matrix(), 
@@ -179,6 +183,7 @@ for t in range(epochs):
   writer.add_scalar("Validation G-mean", val_results.G_mean, t)
   writer.add_scalar("Validation F1 score", val_results.F1_measure, t)
 
+  # saves the 'best' model i.e. the model that 
   if validate_loss < min_val_loss:
     min_val_loss = validate_loss
     torch.save(model.state_dict(), f'models/{date}')
