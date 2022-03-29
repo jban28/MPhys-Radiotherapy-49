@@ -42,7 +42,6 @@ def train_loop(dataloader, model, loss_fn, optimizer, device, cube_size, batch_s
 def test_loop(dataloader, model, device, cube_size):
   size = len(dataloader.dataset)
   num_batches = len(dataloader)
-  test_loss = 0
   all_predictions = torch.zeros(size).to(device)
   all_targets = torch.zeros(size).to(device)
 
@@ -54,6 +53,7 @@ def test_loop(dataloader, model, device, cube_size):
       y = one_hot_vector_labels(y).to(device)
 
       pred = model(X)
+      print(pred)
       _,predictions = torch.max(pred , 1)
       _,targets = torch.max(y, 1)
 
