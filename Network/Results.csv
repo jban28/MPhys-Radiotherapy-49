@@ -1,0 +1,5 @@
+Date/time,Accuracy,Sensitivity,Precision,F1 measure,True positive,True negative,False positive,False negative,Specificity,G mean
+2022-03-29 13:47:26.989154,0.75,0,0,0,0,3,1,0,0.75,0.0
+2022-03-29 13:53:56.668991,1.0,0,0,0,0,4,0,0,1.0,0.0
+2022-03-29 13:56:34.414624,1.0,0,0,0,0,4,0,0,1.0,0.0
+2022-03-29 13:56:54.029701,1.0,0,0,0,0,4,0,0,1.0,0.0

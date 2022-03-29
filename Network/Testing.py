@@ -4,6 +4,8 @@ import torch
 import pickle
 import numpy as np
 import SimpleITK as sitk
+import csv
+import datetime
 
 from Results import Results
 from Networks import CNN, ResNet
@@ -22,6 +24,7 @@ batch_size = int(sys.argv[4])
 device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
 model = CNN().to(device)
+# model = ResNet.generate_model(10).to(device)
 model.load_state_dict(torch.load(f'models/{date}'))
 
 # target_layers = [model.layer4[-1]]
@@ -29,6 +32,8 @@ model.load_state_dict(torch.load(f'models/{date}'))
 open_file = open(f"test_data/{date}.pkl", "rb")
 test_outcomes = pickle.load(open_file)
 open_file.close()
+
+print(test_outcomes)
 
 # Find the original metadata for the patients 
 # Open the metadata.csv file, convert to an array, and remove column headers
@@ -65,10 +70,36 @@ test_predictions, test_targets = test_loop(test_dataloader, model, device,
 image_dimension)
 
 test_results = Results(test_predictions,test_targets)
-# writer.plot_confusion_matrix(test_results.conf_matrix(), 
-# ["No Recurrence", "Recurrence"], "Conf. matrix, testing")
 
-# writer.add_text("Test Results", test_results.results_string())
 print(test_results.results_string())
 test_results.accuracy()
-# writer.close()
+
+# check to see if csv file exists and append test results
+
+exists = os.path.isfile('Results.csv')
+now = datetime.datetime.now()
+accuracy = test_results.accuracy()
+sensitivity = test_results.sensitivity
+precision = test_results.precision
+F1_measure = test_results.F1_measure
+tn = test_results.tn
+tp = test_results.tp
+fn = test_results.fn
+fp = test_results.fp
+specificity = test_results.specificity
+G_mean = test_results.G_mean
+if exists:
+    # Append row
+    with open('Results.csv', 'a', newline='') as csvfile:
+        filewriter = csv.writer(csvfile, delimiter=',')
+        filewriter.writerow([now, accuracy, sensitivity, precision, F1_measure, tp, tn, fp, fn, 
+                            specificity, G_mean])
+else:
+    # Create and then add row
+    with open('Results.csv', 'w', newline='') as csvfile:
+        filewriter = csv.writer(csvfile, delimiter=',')
+        filewriter.writerow(['Date/time', 'Accuracy', 'Sensitivity', 'Precision', 'F1 measure',
+                            'True positive', 'True negative', 'False positive', 
+                            'False negative', 'Specificity', 'G mean'])
+        filewriter.writerow([now, accuracy, sensitivity, precision, F1_measure, tp, tn, fp, fn, 
+                            specificity, G_mean])
