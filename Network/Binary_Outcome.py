@@ -105,16 +105,16 @@ pos_weights = len(tr_neg)/len(tr_pos)
 # Build Datasets
 training_data = ImageDataset(train_outcomes, project_folder + "/" + subfolder + 
 "/Images/", rotate_augment=True, scale_augment=True, flip_augment=True, 
-cube_size=image_dimension)
+shift_augment=True, cube_size=image_dimension)
 validation_data = ImageDataset(validation_outcomes, project_folder + "/" + 
 subfolder + "/Images/", rotate_augment=False, scale_augment=False, 
-flip_augment=False, cube_size=image_dimension)
+flip_augment=False, shift_augment=False, cube_size=image_dimension)
 
 
 
 # Define model and send to device
-model = CNN().to(device)
-# model = ResNet.generate_model(10).to(device)
+# model = CNN().to(device)
+model = ResNet.generate_model(10).to(device)
 
 print(model)
 print(summary(model, (batch_size, 1, image_dimension, 
