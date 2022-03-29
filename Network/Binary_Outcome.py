@@ -102,8 +102,8 @@ test_data = ImageDataset(test_outcomes, project_folder + "/" + subfolder +
 cube_size=image_dimension)
 
 # Define model and send to device
-#model = CNN().to(device)
-model = ResNet.generate_model(10).to(device)
+model = CNN().to(device)
+# model = ResNet.generate_model(10).to(device)
 
 print(model)
 print(summary(model, (batch_size, 1, image_dimension, 
