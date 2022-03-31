@@ -19,7 +19,7 @@ from Tensorboard import customWriter
 from ImageDataset import ImageDataset
 from torch.utils.data import DataLoader
 from Results import log, Results
-from outcomes import split, outcome_str_from_int
+from outcomes import outcomes, split, outcome_str_from_int
 from Network_Loops import train_loop, validate_loop, test_loop
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
@@ -47,6 +47,11 @@ device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 metadata_file = open(project_folder + "/metadata.csv")
 metadata = np.loadtxt(metadata_file, dtype="str", delimiter=",")
 metadata = metadata[1:][:]
+new_metadata = []
+max_follow_up_day = 0
+for patient in metadata:
+  new_metadata.append([patient[0], patient[5], patient[6], patient[7], patient[8]])
+  max_follow_up_day = max(max_follow_up_day, int(patient[5]))
 
 # Find the size of the images being read in
 image_sitk = sitk.ReadImage(project_folder + "/" + subfolder + "/Images/" + 
@@ -54,36 +59,7 @@ metadata[0][0] + ".nii")
 image = sitk.GetArrayFromImage(image_sitk)
 image_dimension = image.shape[0]
 
-# Define empty arrays for positive and negative examples
-positives = []
-negatives = []
-
-# Filter through each patient and assign outcome 
-for patient in metadata:
-  # Check image exists for patient and skip patient if not
-  if not os.path.exists(
-    project_folder + "/" + subfolder + "/Images/" + patient[0] + ".nii"
-    ):
-    # No image file found for patient
-    continue
-  if (patient[(5+outcome_type)] == "") and (int(patient[5]) >= check_day):
-    # Last follow up after check day, no event
-    outcome = 0
-  elif (patient[(5+outcome_type)] == "") and (int(patient[5]) < check_day):
-    # Last follow up before check day, event unknown
-    continue
-  elif int(patient[(5+outcome_type)]) <= check_day:
-    # Event occurred before or on check day
-    outcome = 1
-  else:
-    # Event occurred after check day
-    outcome = 0
-
-  # Append patient name and outcome to arrays
-  if outcome == 1:
-    positives.append([patient[0], outcome])
-  else:
-    negatives.append([patient[0], outcome])
+positives, negatives = outcome(metadata, check_day).lr_dm_binary()
 
 # Split outcomes into train, validation and test
 tr_pos, val_pos, test_pos = split(outcome_list=positives, train_ratio=0.7)
