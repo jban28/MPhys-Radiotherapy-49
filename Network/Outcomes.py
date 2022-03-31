@@ -7,8 +7,10 @@ class outcomes():
     self.check_day = check_day
     if censoring == True:
       self.metadata = self.censor(data_array)
+      self.name = "Censored"
     else:
       self.metadata = data_array
+      self.name = "Uncensored"
 
   def censor(self, array):
     new_array = []
@@ -27,6 +29,7 @@ class outcomes():
         negatives.append([patient[0], 0])
       elif (int(patient[2]) < self.check_day):
         positives.append([patient[0], 1])
+    self.name += ", binary locoregional recurrence"
     return positives, negatives
   
   def dm_binary(self):
@@ -37,6 +40,7 @@ class outcomes():
         negatives.append([patient[0], 0])
       elif (int(patient[3]) < self.check_day):
         positives.append([patient[0], 1])
+    self.name += ", binary distant metastasis"
     return positives, negatives
 
   def lr_dm_binary(self):
@@ -61,16 +65,8 @@ class outcomes():
           positives.append([patient[0], 1])
       else:
         negatives.append([patient[0], 1])
+    self.name += ", binary locoregional recurrence or distant metastasis"
     return positives, negatives
-
-def outcome_str_from_int(outcome_int):
-  if outcome_int == 1:
-    outcome_str = "Locoregional recurrence"
-  elif outcome_int == 2:
-    outcome_str = "Distant Metastasis"
-  elif outcome_int == 3:
-    outcome_str = "Death"
-  return outcome_str
 
 def split(outcome_list, train_ratio):
   # Split a list of patient outcomes into a train, validation and test set. No.

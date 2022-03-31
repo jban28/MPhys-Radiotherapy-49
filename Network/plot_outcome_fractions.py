@@ -1,4 +1,4 @@
-from Outcomes_class import outcomes
+from Outcomes import outcomes
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -20,19 +20,21 @@ pos_fractions_lr_dm = []
 days = []
 day = 1
 while day <= max_follow_up_day:
-  test_outcomes = outcomes(new_metadata, day)
+  outcome = outcomes(new_metadata, day, False)
   days.append(day)
+  total_patients.append(len(outcome.metadata))
 
-  positives, negatives = test_outcomes.lr_binary()
-  pos_fractions_lr.append(len(positives)/len(negatives))
+  positives, negatives = outcome.lr_binary()
+  # pos_fractions_lr.append(len(positives)/len(outcome.metadata))
+  pos_fractions_lr.append(len(positives))
 
-  positives, negatives = test_outcomes.dm_binary()
-  pos_fractions_dm.append(len(positives)/len(negatives))
+  positives, negatives = outcome.dm_binary()
+  # pos_fractions_dm.append(len(positives)/len(outcome.metadata))
+  pos_fractions_dm.append(len(positives))
 
-  positives, negatives = test_outcomes.lr_dm_binary()
-  pos_fractions_lr_dm.append(len(positives)/len(negatives))
-
-  total_patients.append(len(positives)+len(negatives))
+  positives, negatives = outcome.lr_dm_binary()
+  # pos_fractions_lr_dm.append(len(positives)/len(outcome.metadata))
+  pos_fractions_lr_dm.append(len(positives))
   day += 1
 
 
@@ -40,7 +42,7 @@ fig, ax1 = plt.subplots()
 
 color = 'tab:red'
 ax1.set_xlabel('Day')
-ax1.set_ylabel('Fraction of patients with positive outcome', color=color)
+ax1.set_ylabel('Patients with positive outcome', color=color)
 ax1.plot(days, pos_fractions_lr, color=color, linestyle=':', label='LR')
 ax1.plot(days, pos_fractions_dm, color=color, linestyle='--', label='DM')
 ax1.plot(days, pos_fractions_lr_dm, color=color, linestyle='-', label='LR+DM')

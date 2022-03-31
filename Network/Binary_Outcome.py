@@ -1,5 +1,5 @@
 # commands to run from (py39) jd_bannister28_gmail_com@mphys-vm-http:~/MPhys-Radiotherapy-49$
-# python Binary_Outcome.py /data/James_Anna crop_2022_03_01-12_00_12 {outcome type} {day to check for outcome} {epochs} {batch size} {learning rate}
+# python Binary_Outcome.py /data/James_Anna crop_2022_03_01-12_00_12 {day to check for outcome} {epochs} {batch size} {learning rate}
 
 import os
 import sys
@@ -19,7 +19,7 @@ from Tensorboard import customWriter
 from ImageDataset import ImageDataset
 from torch.utils.data import DataLoader
 from Results import log, Results
-from outcomes import outcomes, split, outcome_str_from_int
+from Outcomes import outcomes, split
 from Network_Loops import train_loop, validate_loop, test_loop
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
@@ -31,7 +31,6 @@ date = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
 # Define the location of the data using system inputs
 project_folder = sys.argv[1] 
 subfolder = sys.argv[2] 
-outcome_type = int(sys.argv[3])
 check_day = int(sys.argv[4])
 epochs = int(sys.argv[5])
 batch_size = int(sys.argv[6])
@@ -59,7 +58,8 @@ metadata[0][0] + ".nii")
 image = sitk.GetArrayFromImage(image_sitk)
 image_dimension = image.shape[0]
 
-positives, negatives = outcome(metadata, check_day).lr_dm_binary()
+patient_outcomes = outcomes(metadata, check_day)
+positives, negatives = patient_outcomes.lr_dm_binary()
 
 # Split outcomes into train, validation and test
 tr_pos, val_pos, test_pos = split(outcome_list=positives, train_ratio=0.7)
@@ -123,7 +123,7 @@ writer = customWriter("/data/James_Anna/Tensorboard/", 2, 0, 1,
 train_dataloader, image_dimension)
 
 info_string = (f"Date: {date}  \nNetwork: {model.name}  \nBinary Outcome: "
-f"{outcome_str_from_int(outcome_type)}  \nCheck for outcome on day: {check_day}"
+f"{patient_outcomes.name}  \nCheck for outcome on day: {check_day}"
 f"  \n  Batch Size: {batch_size}  \nLearning Rate: {learning_rate}")
 
 writer.add_text("Info", info_string)
