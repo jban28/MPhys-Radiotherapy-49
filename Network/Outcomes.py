@@ -1,3 +1,4 @@
+import os
 import random
 import numpy as np
 
@@ -90,3 +91,17 @@ def split(outcome_list, train_ratio):
   # Assign all remaining images to the test set and return the label lists
   test_labels = random.sample(outcome_list, validate)
   return train_labels, validate_labels, test_labels
+
+def load_metadata(project_folder, subfolder):
+  metadata_file = open(project_folder + "/metadata.csv")
+  metadata = np.loadtxt(metadata_file, dtype="str", delimiter=",")
+  metadata = metadata[1:][:]
+  new_metadata = []
+  for patient in metadata:
+    if not os.path.exists(
+      project_folder + "/" + subfolder + "/Images/" + patient[0] + ".nii"
+      ):
+      continue
+    new_metadata.append([patient[0], patient[5], patient[6], patient[7], 
+    patient[8]])
+  return new_metadata

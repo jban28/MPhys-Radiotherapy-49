@@ -37,7 +37,7 @@ class customWriter(SummaryWriter):
     img_grid = torchvision.utils.make_grid(images, nrow=3)
     self.add_image(tag, img_grid)
 
-  def plot_tumour(self, tag, dataloader):
+  def plot_tumour(self, dataloader):
     fig = plt.figure(figsize=(24, 24))
     size = len(dataloader.dataset)
     

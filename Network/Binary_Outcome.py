@@ -1,6 +1,3 @@
-# commands to run from (py39) jd_bannister28_gmail_com@mphys-vm-http:~/MPhys-Radiotherapy-49$
-# python Binary_Outcome.py /data/James_Anna crop_2022_03_01-12_00_12 {day to check for outcome} {epochs} {batch size} {learning rate}
-
 import os
 import sys
 import torch
@@ -12,54 +9,42 @@ import SimpleITK as sitk
 import matplotlib.pyplot as plt
 
 from torch import nn
-from Networks import CNN, ResNet
 from torchinfo import summary
 from datetime import datetime
+from Results import log, Results
+from Networks import CNN, ResNet
 from Tensorboard import customWriter
 from ImageDataset import ImageDataset
 from torch.utils.data import DataLoader
-from Results import log, Results
-from Outcomes import outcomes, split
-from Network_Loops import train_loop, validate_loop, test_loop
+from Outcomes import outcomes, split, load_metadata
 from torch.optim.lr_scheduler import ReduceLROnPlateau
+from Network_Loops import train_loop, validate_loop, test_loop
 
-
-tag = 0
-
+device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+notes = input("Add any notes for this run")
 date = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
 
-# Define the location of the data using system inputs
-project_folder = sys.argv[1] 
-subfolder = sys.argv[2] 
-check_day = int(sys.argv[4])
-epochs = int(sys.argv[5])
-batch_size = int(sys.argv[6])
-learning_rate = float(sys.argv[7])
-
-notes = input("Add any notes for this run")
-
-# Connect to GPU if available and move model and loss function across
-device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
-
-# Find the original metadata for the patients 
-# Open the metadata.csv file, convert to an array, and remove column headers
-metadata_file = open(project_folder + "/metadata.csv")
-metadata = np.loadtxt(metadata_file, dtype="str", delimiter=",")
-metadata = metadata[1:][:]
-new_metadata = []
-max_follow_up_day = 0
-for patient in metadata:
-  new_metadata.append([patient[0], patient[5], patient[6], patient[7], patient[8]])
-  max_follow_up_day = max(max_follow_up_day, int(patient[5]))
-
-# Find the size of the images being read in
-image_sitk = sitk.ReadImage(project_folder + "/" + subfolder + "/Images/" + 
-metadata[0][0] + ".nii")
-image = sitk.GetArrayFromImage(image_sitk)
-image_dimension = image.shape[0]
-
+#===============================================================================
+# Set-up
+#===============================================================================
+project_folder = "/data/James_Anna"
+subfolder = "crop_2022_03_01-12_00_12"
+check_day = 1000
+epochs = 100
+batch_size = 4
+learning_rate = 0.001
+metadata = load_metadata(project_folder, subfolder)
 patient_outcomes = outcomes(metadata, check_day)
 positives, negatives = patient_outcomes.lr_dm_binary()
+# model = CNN().to(device)
+model = ResNet.generate_model(10).to(device)
+#loss_fn = nn.BCEWithLogitsLoss(torch.tensor([(len(negatives)/len(positives)), 
+#(len(positives)/len(negatives))])).to(device)
+loss_fn = nn.BCEWithLogitsLoss(torch.tensor([(len(negatives)/len(positives)), 
+1])).to(device)
+optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
+scheduler = ReduceLROnPlateau(optimizer, 'min', patience = 5)
+#===============================================================================
 
 # Split outcomes into train, validation and test
 tr_pos, val_pos, test_pos = split(outcome_list=positives, train_ratio=0.7)
@@ -79,8 +64,11 @@ test_data_file = open(f"test_data/{date}.pkl", "wb")
 pickle.dump(test_outcomes, test_data_file)
 test_data_file.close()
 
-# Define variable for the weight of positive examples
-pos_weights = len(tr_neg)/len(tr_pos)
+# Find the size of the images being read in
+image_sitk = sitk.ReadImage(project_folder + "/" + subfolder + "/Images/" + 
+metadata[0][0] + ".nii")
+image = sitk.GetArrayFromImage(image_sitk)
+image_dimension = image.shape[0]
 
 # Build Datasets
 training_data = ImageDataset(train_outcomes, project_folder + "/" + subfolder + 
@@ -90,23 +78,6 @@ validation_data = ImageDataset(validation_outcomes, project_folder + "/" +
 subfolder + "/Images/", rotate_augment=False, scale_augment=False, 
 flip_augment=False, shift_augment=False, cube_size=image_dimension)
 
-
-
-# Define model and send to device
-# model = CNN().to(device)
-model = ResNet.generate_model(10).to(device)
-
-print(model)
-print(summary(model, (batch_size, 1, image_dimension, 
-image_dimension, image_dimension), verbose=0))
-
-# Define loss function and optimizer and send to device
-#loss_fn = nn.BCEWithLogitsLoss(torch.tensor([(1/pos_weights), 
-#pos_weights])).to(device)
-loss_fn = nn.BCEWithLogitsLoss(torch.tensor([(1/pos_weights), 
-1])).to(device)
-optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
-scheduler = ReduceLROnPlateau(optimizer, 'min', patience = 5)
 
 # Create Weighted Random Sampler to feed into dataloader
 
@@ -128,8 +99,7 @@ f"  \n  Batch Size: {batch_size}  \nLearning Rate: {learning_rate}")
 
 writer.add_text("Info", info_string)
 # print("Plotting Images")
-# writer.plot_tumour(dataloader = train_dataloader, tag=tag)
-
+# writer.plot_tumour(dataloader = train_dataloader)
 
 writer.add_text("Notes", notes)
 
