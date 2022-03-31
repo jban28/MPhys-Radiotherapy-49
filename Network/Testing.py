@@ -1,9 +1,12 @@
+# python Testing.py /data/James_Anna crop_2022_03_01-12_00_12 2022_03_29_15_46_01
+
 import os
 import csv
 import sys
 import torch
 import pickle
 import numpy as np
+import matplotlib.pyplot as plt
 import SimpleITK as sitk
 
 from Results import Results
@@ -14,16 +17,19 @@ from pytorch_grad_cam import GradCAM
 from ImageDataset import ImageDataset
 from torch.utils.data import DataLoader
 from pytorch_grad_cam.utils.image import show_cam_on_image
+from pytorch_grad_cam import GradCAM
+from pytorch_grad_cam.utils.image import show_cam_on_image
+from medcam import medcam
 
 project_folder = sys.argv[1] 
 subfolder = sys.argv[2] 
 date = sys.argv[3]
-batch_size = int(sys.argv[4])
+batch_size = 1 # must have a batch size of 1 for GradCAM
 
 device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
-model = CNN().to(device)
-# model = ResNet.generate_model(10).to(device)
+# model = CNN().to(device)
+model = ResNet.generate_model(10).to(device)
 model.load_state_dict(torch.load(f'models/{date}'))
 
 # target_layers = [model.layer4[-1]]
@@ -32,7 +38,7 @@ open_file = open(f"test_data/{date}.pkl", "rb")
 test_outcomes = pickle.load(open_file)
 open_file.close()
 
-print(test_outcomes)
+#print(test_outcomes)
 
 # Find the original metadata for the patients 
 # Open the metadata.csv file, convert to an array, and remove column headers
@@ -68,11 +74,11 @@ print("Testing")
 test_predictions, test_targets = test_loop(test_dataloader, model, device, 
 image_dimension)
 
-print(test_predictions, test_targets)
+#print(test_predictions, test_targets)
 
 test_results = Results(test_predictions,test_targets)
 
-print(test_results.results_string())
+#print(test_results.results_string())
 test_results.accuracy()
 
 # check to see if csv file exists and append test results
@@ -103,3 +109,64 @@ else:
                             'False negative', 'Specificity', 'G mean'])
         filewriter.writerow([now, accuracy, sensitivity, precision, F1_measure, tp, tn, fp, fn, 
                             specificity, G_mean])
+
+
+
+
+
+# GradCAM
+for i in range(4):
+    layer = f'layer{i+1}'
+    print(layer)
+    model = medcam.inject(model, output_dir="medcam_test", 
+        save_maps=True, layer=layer, replace=True)
+    #print(medcam.get_layers(model))
+    model.eval()
+    image, label, pid = next(iter(test_dataloader))
+    filename = pid[0][0]
+    image = image[None].to(device, torch.float)
+    attn = model(image)
+
+    attn = np.squeeze(attn.cpu().numpy())
+    img = np.squeeze(image.cpu().numpy())
+    print(img.shape, attn.shape)
+    slice_num = 102
+    fig, ax = plt.subplots(1,1, figsize=(10,10))
+    im = img[..., slice_num]
+    attn = attn[..., slice_num]
+    print(pid)
+    print(attn.max(), attn.min())
+    ax.imshow(im, cmap='gray')
+    ax.imshow(attn, cmap='jet', alpha=0.5)
+    fig.savefig(f'./GradCAM_layer{i+1}.png')
+
+# for looking at the convolutional layers conv1 and conv2
+
+for i in range(2):
+    layer = f'conv{i+1}'
+    print(layer)
+    model = medcam.inject(model, output_dir="medcam_test", 
+        save_maps=True, layer=layer, replace=True)
+    #print(medcam.get_layers(model))
+    model.eval()
+    image, label, pid = next(iter(test_dataloader))
+    filename = pid[0][0]
+    image = image[None].to(device, torch.float)
+    attn = model(image)
+
+    attn = np.squeeze(attn.cpu().numpy())
+    img = np.squeeze(image.cpu().numpy())
+    print(img.shape, attn.shape)
+    slice_num = 102
+    fig, ax = plt.subplots(1,1, figsize=(10,10))
+    im = img[..., slice_num]
+    attn = attn[..., slice_num]
+    print(pid)
+    print(attn.max(), attn.min())
+    ax.imshow(im, cmap='gray')
+    ax.imshow(attn, cmap='jet', alpha=0.5)
+    fig.savefig(f'./GradCAM_conv{i+1}.png')
+
+
+
+
