@@ -53,7 +53,7 @@ def test_loop(dataloader, model, device, cube_size):
       y = one_hot_vector_labels(y).to(device)
 
       pred = model(X)
-      print(pred)
+      #print(pred)
       _,predictions = torch.max(pred , 1)
       _,targets = torch.max(y, 1)
 
