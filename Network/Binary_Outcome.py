@@ -132,7 +132,7 @@ scheduler = ReduceLROnPlateau(optimizer, 'min', patience = 5)
 
 # Build Dataloaders
 train_dataloader = DataLoader(training_data, batch_size, shuffle=True)
-validate_dataloader = DataLoader(validation_data, batch_size, shuffle=True)
+validate_dataloader = DataLoader(validation_data, batch_size, shuffle=False)
 
 writer = customWriter("/data/James_Anna/Tensorboard/", 2, 0, 1, 
 train_dataloader, image_dimension)

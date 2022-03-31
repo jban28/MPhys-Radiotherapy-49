@@ -50,7 +50,7 @@ test_data = ImageDataset(test_outcomes, project_folder + "/" + subfolder +
 "/Images/", rotate_augment=False, scale_augment=False, flip_augment=False, 
 shift_augment=False, cube_size=image_dimension)
 
-test_dataloader = DataLoader(test_data, batch_size, shuffle=True)
+test_dataloader = DataLoader(test_data, batch_size, shuffle=False)
 
 # data = next(test_dataloader)
 # input_tensor = data[0]
