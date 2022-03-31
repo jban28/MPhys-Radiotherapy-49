@@ -125,10 +125,19 @@ print(summary(model, (batch_size, 1, image_dimension,
 image_dimension, image_dimension), verbose=0))
 
 # Define loss function and optimizer and send to device
+#loss_fn = nn.BCEWithLogitsLoss(torch.tensor([(1/pos_weights), 
+#pos_weights])).to(device)
 loss_fn = nn.BCEWithLogitsLoss(torch.tensor([(1/pos_weights), 
-pos_weights])).to(device)
+1])).to(device)
 optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
 scheduler = ReduceLROnPlateau(optimizer, 'min', patience = 5)
+
+# Create Weighted Random Sampler to feed into dataloader
+
+#class_sample_count = [, 1] # dataset has 10 class-1 samples, 1 class-2 samples, etc.
+# weights = 1 / torch.Tensor(class_sample_count)
+#sampler = torch.utils.data.sampler.WeightedRandomSampler(weights, batch_size)
+#trainloader = data_utils.DataLoader(train_dataset, batch_size = batch_size, shuffle=True, sampler = sampler)
 
 # Build Dataloaders
 train_dataloader = DataLoader(training_data, batch_size, shuffle=True)
