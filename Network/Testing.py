@@ -115,58 +115,103 @@ else:
 
 
 # GradCAM
-for i in range(4):
-    layer = f'layer{i+1}'
-    print(layer)
-    model = medcam.inject(model, output_dir="medcam_test", 
-        save_maps=True, layer=layer, replace=True)
-    #print(medcam.get_layers(model))
-    model.eval()
-    image, label, pid = next(iter(test_dataloader))
-    filename = pid[0][0]
-    image = image[None].to(device, torch.float)
-    attn = model(image)
-
-    attn = np.squeeze(attn.cpu().numpy())
-    img = np.squeeze(image.cpu().numpy())
-    print(img.shape, attn.shape)
-    slice_num = 102
-    fig, ax = plt.subplots(1,1, figsize=(10,10))
-    im = img[..., slice_num]
-    attn = attn[..., slice_num]
-    print(pid)
-    print(attn.max(), attn.min())
-    ax.imshow(im, cmap='gray')
-    ax.imshow(attn, cmap='jet', alpha=0.5)
-    fig.savefig(f'./GradCAM_layer{i+1}.png')
+# layer_names = ['conv1', 'layer1', 'layer2', 'layer3', 'layer4', 'conv2']
+# for i in range(6):
+#     layers = layer_names[i]
+#     print(layers)
+#     model = medcam.inject(model, output_dir="medcam_test", 
+#         save_maps=True, layer=layers, replace=True)
+#     #print(medcam.get_layers(model))
+#     model.eval()
+#     image, label, pid = next(iter(test_dataloader))
+#     filename = pid[0][0]
+#     image = image[None].to(device, torch.float)
+#     attn = model(image)
+#     attn = np.squeeze(attn.cpu().numpy())
+#     img = np.squeeze(image.cpu().numpy())
+#     print(img.shape, attn.shape)
+#     slice_num = 102
+#     fig, ax = plt.subplots(1,1, figsize=(10,10))
+#     im = img[..., slice_num]
+#     attn = attn[..., slice_num]
+#     print(pid)
+#     print(attn.max(), attn.min())
+#     ax.imshow(im, cmap='gray')
+#     ax.imshow(attn, cmap='jet', alpha=0.5)
+#     fig.savefig('./GradCAM_'+ layer_names[i] +'.png')
 
 # for looking at the convolutional layers conv1 and conv2
 
-for i in range(2):
-    layer = f'conv{i+1}'
-    print(layer)
-    model = medcam.inject(model, output_dir="medcam_test", 
-        save_maps=True, layer=layer, replace=True)
-    #print(medcam.get_layers(model))
-    model.eval()
-    image, label, pid = next(iter(test_dataloader))
-    filename = pid[0][0]
-    image = image[None].to(device, torch.float)
-    attn = model(image)
+# for i in range(2):
+#     layer = f'conv{i+1}'
+#     print(layer)
+#     model = medcam.inject(model, output_dir="medcam_test", 
+#         save_maps=True, layer=layer, replace=True)
+#     #print(medcam.get_layers(model))
+#     model.eval()
+#     image, label, pid = next(iter(test_dataloader))
+#     filename = pid[0][0]
+#     image = image[None].to(device, torch.float)
+#     attn = model(image)
 
-    attn = np.squeeze(attn.cpu().numpy())
-    img = np.squeeze(image.cpu().numpy())
-    print(img.shape, attn.shape)
-    slice_num = 102
-    fig, ax = plt.subplots(1,1, figsize=(10,10))
-    im = img[..., slice_num]
-    attn = attn[..., slice_num]
-    print(pid)
-    print(attn.max(), attn.min())
-    ax.imshow(im, cmap='gray')
-    ax.imshow(attn, cmap='jet', alpha=0.5)
-    fig.savefig(f'./GradCAM_conv{i+1}.png')
+#     attn = np.squeeze(attn.cpu().numpy())
+#     img = np.squeeze(image.cpu().numpy())
+#     print(img.shape, attn.shape)
+#     slice_num = 102
+#     fig, ax = plt.subplots(1,1, figsize=(10,10))
+#     im = img[..., slice_num]
+#     attn = attn[..., slice_num]
+#     print(pid)
+#     print(attn.max(), attn.min())
+#     ax.imshow(im, cmap='gray')
+#     ax.imshow(attn, cmap='jet', alpha=0.5)
+#     fig.savefig(f'./GradCAM_conv{i+1}.png')
+
+# layer = 'layer1'
+# #print(layer)
+# model = medcam.inject(model, output_dir="medcam_test", 
+#     save_maps=True, layer=layer, replace=True)
+# print(medcam.get_layers(model))
+# model.eval()
+# image, label, pid = next(iter(test_dataloader))
+# filename = pid[0][0]
+# image = image[None].to(device, torch.float)
+# attn = model(image)
+
+# attn = np.squeeze(attn.cpu().numpy())
+# img = np.squeeze(image.cpu().numpy())
+# print(img.shape, attn.shape)
+# slice_num = 102
+# fig, ax = plt.subplots(1,1, figsize=(10,10))
+# im = img[..., slice_num]
+# attn = attn[..., slice_num]
+# print(pid)
+# print(attn.max(), attn.min())
+# ax.imshow(im, cmap='gray')
+# ax.imshow(attn, cmap='jet', alpha=0.5)
+# fig.savefig('./GradCAM_layer1.png')
 
 
+layer = 'layer4'
+#print(layer)
+model = medcam.inject(model, output_dir="medcam_test", 
+    save_maps=True, layer=layer, replace=True)
+print(medcam.get_layers(model))
+model.eval()
+image, label, pid = next(iter(test_dataloader))
+filename = pid[0][0]
+image = image[None].to(device, torch.float)
+attn = model(image)
 
-
+attn = np.squeeze(attn.cpu().numpy())
+img = np.squeeze(image.cpu().numpy())
+print(img.shape, attn.shape)
+slice_num = 102
+fig, ax = plt.subplots(1,1, figsize=(10,10))
+im = img[..., slice_num]
+attn = attn[..., slice_num]
+print(pid)
+print(attn.max(), attn.min())
+ax.imshow(im, cmap='gray')
+ax.imshow(attn, cmap='jet', alpha=0.5)
+fig.savefig('./GradCAM_layer4.png')
