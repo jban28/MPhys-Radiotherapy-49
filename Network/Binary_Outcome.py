@@ -93,7 +93,7 @@ weights = 1 / class_sample_count
 #print(train_outcomes[t,1])
 samples_weight = np.array([weights[t[1]] for t in train_outcomes])
 samples_weight = torch.from_numpy(samples_weight)
-#sampler = WeightedRandomSampler(weights, batch_size)
+
 sampler = torch.utils.data.sampler.WeightedRandomSampler(samples_weight.type('torch.DoubleTensor'), len(samples_weight))
 
 # Build Dataloaders
