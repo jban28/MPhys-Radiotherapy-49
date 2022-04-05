@@ -117,7 +117,7 @@ for t in range(epochs):
   print("    Validation")
   validate_loss, predictions, targets = validate_loop(validate_dataloader, 
   model, loss_fn, device, image_dimension)
-  scheduler.step(validate_loss)
+  #scheduler.step(validate_loss)
 
   val_results = Results(predictions,targets)
   writer.plot_confusion_matrix(val_results.conf_matrix(), 
