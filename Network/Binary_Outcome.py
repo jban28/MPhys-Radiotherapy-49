@@ -2,6 +2,7 @@ import os
 import sys
 import torch
 import pickle
+import random
 import shutil
 import numpy as np
 import torchvision
@@ -28,9 +29,10 @@ date = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
 # Set-up
 #===============================================================================
 project_folder = "/data/James_Anna"
-subfolder = "crop_2022_03_01-12_00_12"
+#subfolder = "crop_2022_03_01-12_00_12"
+subfolder = "crop_2022_03_29-16_08_02"
 check_day = 1000
-epochs = 100
+epochs = 10
 batch_size = 4
 learning_rate = 0.001
 metadata = load_metadata(project_folder, subfolder)
@@ -52,8 +54,14 @@ tr_neg, val_neg, test_neg = split(outcome_list=negatives, train_ratio=0.7)
 
 # Construct outcome variables
 train_outcomes = tr_pos + tr_neg
+#print('train outcomes')
+#print(train_outcomes)
 validation_outcomes = val_pos + val_neg
+#print('validation outcomes')
+#print(validation_outcomes)
 test_outcomes = test_pos + test_neg
+#print('test outcomes')
+#print(test_outcomes)
 
 if not os.path.exists("test_data"):
   os.mkdir("test_data")
@@ -87,7 +95,7 @@ flip_augment=False, shift_augment=False, cube_size=image_dimension)
 #trainloader = data_utils.DataLoader(train_dataset, batch_size = batch_size, shuffle=True, sampler = sampler)
 
 # Build Dataloaders
-train_dataloader = DataLoader(training_data, batch_size, shuffle=True)
+train_dataloader = DataLoader(training_data, batch_size, shuffle=False, sampler = None)
 validate_dataloader = DataLoader(validation_data, batch_size, shuffle=False)
 
 writer = customWriter("/data/James_Anna/Tensorboard/", 2, 0, 1, 

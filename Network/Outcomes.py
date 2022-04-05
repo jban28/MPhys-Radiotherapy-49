@@ -79,16 +79,19 @@ def split(outcome_list, train_ratio):
   validate = int(0.5 * (len(outcome_list) - train))
 
   # Define train images from random sample without replacement of all outcomes
+  random.seed(0) # Use random.seed(0) for the train dataset
   train_labels = random.sample(outcome_list, train)
   for item in train_labels:
     outcome_list.remove(item)
 
   # Define the validation images in the same way as above
+  random.seed(1) # Use random.seed(1) for the validation dataset
   validate_labels = random.sample(outcome_list, validate)
   for item in validate_labels:
     outcome_list.remove(item)
 
   # Assign all remaining images to the test set and return the label lists
+  random.seed(2) # Use random.seed(2) for the test dataset
   test_labels = random.sample(outcome_list, validate)
   return train_labels, validate_labels, test_labels
 
