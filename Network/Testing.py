@@ -1,5 +1,3 @@
-# python Testing.py /data/James_Anna crop_2022_03_01-12_00_12 2022_03_29_15_46_01
-
 import os
 import csv
 import sys
@@ -21,16 +19,19 @@ from pytorch_grad_cam import GradCAM
 from pytorch_grad_cam.utils.image import show_cam_on_image
 from medcam import medcam
 
-project_folder = sys.argv[1] 
-subfolder = sys.argv[2] 
-date = sys.argv[3]
-batch_size = 1 # must have a batch size of 1 for GradCAM
-
 device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+
+#===============================================================================
+# Set-up
+#===============================================================================
+project_folder = "/data/James_Anna"
+subfolder = "crop_2022_03_01-12_00_12"
+date = "2022_03_29_15_46_01"
 
 # model = CNN().to(device)
 model = ResNet.generate_model(10).to(device)
 model.load_state_dict(torch.load(f'models/{date}'))
+#===============================================================================
 
 # target_layers = [model.layer4[-1]]
 
@@ -56,30 +57,14 @@ test_data = ImageDataset(test_outcomes, project_folder + "/" + subfolder +
 "/Images/", rotate_augment=False, scale_augment=False, flip_augment=False, 
 shift_augment=False, cube_size=image_dimension)
 
-test_dataloader = DataLoader(test_data, batch_size, shuffle=False)
-
-# data = next(test_dataloader)
-# input_tensor = data[0]
-
-# with GradCAM(model=model, target_layers=target_layers, use_cuda=True) as cam:
-#   targets = None
-#   grayscale_cam = cam(input_tensor=input_tensor, targets=targets)
-#   grayscale_cam = grayscale_cam[0,:]
-
-# input = input_tensor
-# grad_cam = grayscale_cam
+test_dataloader = DataLoader(test_data, 1, shuffle=False)
 
 # Testing
 print("Testing")
 test_predictions, test_targets = test_loop(test_dataloader, model, device, 
 image_dimension)
 
-#print(test_predictions, test_targets)
-
 test_results = Results(test_predictions,test_targets)
-
-#print(test_results.results_string())
-test_results.accuracy()
 
 # check to see if csv file exists and append test results
 

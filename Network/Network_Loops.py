@@ -1,5 +1,6 @@
 import torch
 from torch import reshape
+# Negative patient has 0 --> [1,0], positive patient has 1 --> [0,1]
 
 def one_hot_vector_labels(scalar_labels):
   vector_labels = torch.empty((len(scalar_labels),2))
