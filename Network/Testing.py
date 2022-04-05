@@ -192,7 +192,7 @@ else:
 # fig.savefig('./GradCAM_layer1.png')
 
 
-layer = 'layer4'
+layer = 'conv2'
 #print(layer)
 model = medcam.inject(model, output_dir="medcam_test", 
     save_maps=True, layer=layer, replace=True)
@@ -214,4 +214,4 @@ print(pid)
 print(attn.max(), attn.min())
 ax.imshow(im, cmap='gray')
 ax.imshow(attn, cmap='jet', alpha=0.5)
-fig.savefig('./GradCAM_layer4.png')
+fig.savefig('./GradCAM_conv2.png')
