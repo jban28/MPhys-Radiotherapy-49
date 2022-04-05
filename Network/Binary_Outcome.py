@@ -42,7 +42,7 @@ positives, negatives = patient_outcomes.lr_dm_binary()
 model = ResNet.generate_model(10).to(device)
 #loss_fn = nn.BCEWithLogitsLoss(torch.tensor([(len(negatives)/len(positives)), 
 #(len(positives)/len(negatives))])).to(device)
-loss_fn = nn.BCEWithLogitsLoss(torch.tensor([(len(negatives)/len(positives)), 
+loss_fn = nn.BCEWithLogitsLoss(torch.tensor([(len(positives)/len(negatives)), 
 1])).to(device)
 optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
 scheduler = ReduceLROnPlateau(optimizer, 'min', patience = 5)
@@ -88,14 +88,16 @@ flip_augment=False, shift_augment=False, cube_size=image_dimension)
 
 
 # Create Weighted Random Sampler to feed into dataloader
-
-#class_sample_count = [, 1] # dataset has 10 class-1 samples, 1 class-2 samples, etc.
-# weights = 1 / torch.Tensor(class_sample_count)
-#sampler = torch.utils.data.sampler.WeightedRandomSampler(weights, batch_size)
-#trainloader = data_utils.DataLoader(train_dataset, batch_size = batch_size, shuffle=True, sampler = sampler)
+class_sample_count = np.array([len(tr_neg), len(tr_pos)]) # dataset has 10 class-1 samples, 1 class-2 samples, etc.
+weights = 1 / class_sample_count
+#print(train_outcomes[t,1])
+samples_weight = np.array([weights[t[1]] for t in train_outcomes])
+samples_weight = torch.from_numpy(samples_weight)
+#sampler = WeightedRandomSampler(weights, batch_size)
+sampler = torch.utils.data.sampler.WeightedRandomSampler(samples_weight.type('torch.DoubleTensor'), len(samples_weight))
 
 # Build Dataloaders
-train_dataloader = DataLoader(training_data, batch_size, shuffle=False, sampler = None)
+train_dataloader = DataLoader(training_data, batch_size, shuffle=False, sampler = sampler)
 validate_dataloader = DataLoader(validation_data, batch_size, shuffle=False)
 
 writer = customWriter("/data/James_Anna/Tensorboard/", 2, 0, 1, 
