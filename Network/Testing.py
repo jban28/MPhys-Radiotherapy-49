@@ -67,7 +67,8 @@ image_dimension)
 test_results = Results(test_predictions,test_targets)
 
 # check to see if csv file exists and append test results
-
+if not os.path.exists("test_runs"):
+    os.mkdir("test_runs")
 exists = os.path.isfile('Results.csv')
 accuracy = test_results.accuracy()
 sensitivity = test_results.sensitivity
@@ -92,7 +93,7 @@ else:
         filewriter.writerow(['Date/time', 'Accuracy', 'Sensitivity', 'Precision', 'F1 measure',
                             'True positive', 'True negative', 'False positive', 
                             'False negative', 'Specificity', 'G mean'])
-        filewriter.writerow([now, accuracy, sensitivity, precision, F1_measure, tp, tn, fp, fn, 
+        filewriter.writerow([date, accuracy, sensitivity, precision, F1_measure, tp, tn, fp, fn, 
                             specificity, G_mean])
 
 
@@ -175,7 +176,8 @@ else:
 # ax.imshow(im, cmap='gray')
 # ax.imshow(attn, cmap='jet', alpha=0.5)
 # fig.savefig('./GradCAM_layer1.png')
-
+if not os.path.exists(f"test_runs/{date}"):
+    os.mkdir(f"test_runs/{date}")
 layer_names = ['conv1', 'layer1', 'layer2', 'layer3', 'layer4', 'conv2']
 for layer in layer_names:
     model = medcam.inject(model, output_dir="medcam_test", 
@@ -198,4 +200,4 @@ for layer in layer_names:
     print(attn.max(), attn.min())
     ax.imshow(im, cmap='gray')
     ax.imshow(attn, cmap='jet', alpha=0.5)
-    fig.savefig(f'.test_runs/{date}/{layer}.png')
+    fig.savefig(f'test_runs/{date}/{layer}.png')
