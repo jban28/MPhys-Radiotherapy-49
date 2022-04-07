@@ -81,13 +81,13 @@ specificity = test_results.specificity
 G_mean = test_results.G_mean
 if exists:
     # Append row
-    with open('Results.csv', 'a', newline='') as csvfile:
+    with open('test_runs/Results.csv', 'a', newline='') as csvfile:
         filewriter = csv.writer(csvfile, delimiter=',')
         filewriter.writerow([date, accuracy, sensitivity, precision, F1_measure, tp, tn, fp, fn, 
                             specificity, G_mean])
 else:
     # Create and then add row
-    with open('Results.csv', 'w', newline='') as csvfile:
+    with open('test_runs/Results.csv', 'w', newline='') as csvfile:
         filewriter = csv.writer(csvfile, delimiter=',')
         filewriter.writerow(['Date/time', 'Accuracy', 'Sensitivity', 'Precision', 'F1 measure',
                             'True positive', 'True negative', 'False positive', 
@@ -176,27 +176,26 @@ else:
 # ax.imshow(attn, cmap='jet', alpha=0.5)
 # fig.savefig('./GradCAM_layer1.png')
 
+layer_names = ['conv1', 'layer1', 'layer2', 'layer3', 'layer4', 'conv2']
+for layer in layer_names:
+    model = medcam.inject(model, output_dir="medcam_test", 
+        save_maps=True, layer=layer, replace=True)
+    print(medcam.get_layers(model))
+    model.eval()
+    image, label, pid = next(iter(test_dataloader))
+    filename = pid[0][0]
+    image = image[None].to(device, torch.float)
+    attn = model(image)
 
-layer = 'conv2'
-#print(layer)
-model = medcam.inject(model, output_dir="medcam_test", 
-    save_maps=True, layer=layer, replace=True)
-print(medcam.get_layers(model))
-model.eval()
-image, label, pid = next(iter(test_dataloader))
-filename = pid[0][0]
-image = image[None].to(device, torch.float)
-attn = model(image)
-
-attn = np.squeeze(attn.cpu().numpy())
-img = np.squeeze(image.cpu().numpy())
-print(img.shape, attn.shape)
-slice_num = 102
-fig, ax = plt.subplots(1,1, figsize=(10,10))
-im = img[..., slice_num]
-attn = attn[..., slice_num]
-print(pid)
-print(attn.max(), attn.min())
-ax.imshow(im, cmap='gray')
-ax.imshow(attn, cmap='jet', alpha=0.5)
-fig.savefig('./GradCAM_conv2.png')
+    attn = np.squeeze(attn.cpu().numpy())
+    img = np.squeeze(image.cpu().numpy())
+    print(img.shape, attn.shape)
+    slice_num = 102
+    fig, ax = plt.subplots(1,1, figsize=(10,10))
+    im = img[..., slice_num]
+    attn = attn[..., slice_num]
+    print(pid)
+    print(attn.max(), attn.min())
+    ax.imshow(im, cmap='gray')
+    ax.imshow(attn, cmap='jet', alpha=0.5)
+    fig.savefig(f'.test_runs/{date}/{layer}.png')
