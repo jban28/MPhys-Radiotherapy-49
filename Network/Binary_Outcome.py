@@ -38,8 +38,8 @@ learning_rate = 0.001
 metadata = load_metadata(project_folder, subfolder)
 patient_outcomes = outcomes(metadata, check_day)
 positives, negatives = patient_outcomes.lr_dm_binary()
-# model = CNN().to(device)
-model = ResNet.generate_model(10).to(device)
+model = CNN().to(device)
+# model = ResNet.generate_model(10).to(device)
 #loss_fn = nn.BCEWithLogitsLoss(torch.tensor([(len(negatives)/len(positives)), 
 #(len(positives)/len(negatives))])).to(device)
 loss_fn = nn.BCEWithLogitsLoss(torch.tensor([(len(positives)/len(negatives)), 
