@@ -67,6 +67,8 @@ print("Testing")
 test_predictions, test_targets = test_loop(test_dataloader, model, device, 
 image_dimension)
 
+print(test_predictions, test_targets)
+
 # Define test results
 test_results = Results(test_predictions,test_targets)
 accuracy = test_results.accuracy()
@@ -81,12 +83,12 @@ specificity = test_results.specificity
 G_mean = test_results.G_mean
 
 # Append test results to csv
-if os.path.isfile('Results.csv'):
+if os.path.isfile('test_runs/Results.csv'):
     # Append row
     with open('test_runs/Results.csv', 'a', newline='') as csvfile:
         filewriter = csv.writer(csvfile, delimiter=',')
         filewriter.writerow([date, accuracy, sensitivity, precision, F1_measure,
-         tp, tn, fp, fn, specificity, G_mean])
+        tp, tn, fp, fn, specificity, G_mean])
 else:
     # Create and then add row
     with open('test_runs/Results.csv', 'w', newline='') as csvfile:
@@ -100,24 +102,24 @@ else:
 # Save medcam images for each layer
 layer_names = ['conv1', 'layer1', 'layer2', 'layer3', 'layer4', 'conv2']
 for layer in layer_names:
-    model = medcam.inject(model, output_dir="medcam_test", 
-        save_maps=True, layer=layer, replace=True)
-    print(medcam.get_layers(model))
-    model.eval()
+    x = medcam.inject(model, output_dir="medcam_test", 
+        save_maps=False, layer=layer, replace=True) # save_maps=True for nii
+    # print(medcam.get_layers(model))
+    x.eval()
     image, label, pid = next(iter(test_dataloader))
     filename = pid[0][0]
     image = image[None].to(device, torch.float)
-    attn = model(image)
+    attn = x(image)
 
     attn = np.squeeze(attn.cpu().numpy())
     img = np.squeeze(image.cpu().numpy())
-    print(img.shape, attn.shape)
+    # print(img.shape, attn.shape)
     slice_num = 102
     fig, ax = plt.subplots(1,1, figsize=(10,10))
     im = img[..., slice_num]
     attn = attn[..., slice_num]
-    print(pid)
-    print(attn.max(), attn.min())
+    # print(pid)
+    # print(attn.max(), attn.min())
     ax.imshow(im, cmap='gray')
     ax.imshow(attn, cmap='jet', alpha=0.5)
     fig.savefig(f'test_runs/{date}/{layer}.png')

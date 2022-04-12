@@ -30,13 +30,13 @@ class Results:
     self.fn = 0
     i = 0
     while i < len(self.predictions):
-      if (predictions[i] == targets[i] and predictions[i] == 1):
+      if ((predictions[i] == targets[i]) and (predictions[i] == 1)):
         self.tp += 1
-      elif (predictions[i] == targets[i] and predictions[i] == 0):
+      elif ((predictions[i] == targets[i]) and (predictions[i] == 0)):
         self.tn += 1
-      elif (predictions[i] != targets[i] and predictions[i] == 1):
+      elif ((predictions[i] != targets[i]) and (predictions[i] == 1)):
         self.fp += 1
-      elif (predictions[i] != targets[i] and predictions[i] == 0):
+      elif ((predictions[i] != targets[i]) and (predictions[i] == 0)):
         self.fn += 1
       i += 1
     
