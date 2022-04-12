@@ -22,7 +22,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from Network_Loops import train_loop, validate_loop, test_loop
 
 device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
-notes = input("Add any notes for this run")
+notes = input("Add any notes for this run: ")
 date = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
 
 #===============================================================================
@@ -97,7 +97,8 @@ samples_weight = torch.from_numpy(samples_weight)
 sampler = torch.utils.data.sampler.WeightedRandomSampler(samples_weight.type('torch.DoubleTensor'), len(samples_weight))
 
 # Build Dataloaders
-train_dataloader = DataLoader(training_data, batch_size, shuffle=False, sampler = sampler)
+train_dataloader = DataLoader(training_data, batch_size, shuffle=False, 
+sampler=sampler)
 validate_dataloader = DataLoader(validation_data, batch_size, shuffle=False)
 
 writer = customWriter("/data/James_Anna/Tensorboard/", 2, 0, 1, 

@@ -67,8 +67,6 @@ print("Testing")
 test_predictions, test_targets = test_loop(test_dataloader, model, device, 
 image_dimension)
 
-print(test_predictions, test_targets)
-
 # Define test results
 test_results = Results(test_predictions,test_targets)
 accuracy = test_results.accuracy()
