@@ -27,8 +27,6 @@ def train_loop(dataloader, model, loss_fn, optimizer, device, cube_size, batch_s
     pred = model(X)
     loss = loss_fn(pred, y)
     sum_loss += loss.item()
-    print(patient)
-    print(y)
 
     # Backpropagation
     optimizer.zero_grad()

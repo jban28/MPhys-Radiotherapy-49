@@ -25,8 +25,8 @@ device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 # Set-up
 #===============================================================================
 project_folder = "/data/James_Anna"
-subfolder = "crop_2022_03_01-12_00_12"
-date = "2022_03_29_15_46_01"
+subfolder = "crop_2022_03_29-16_08_02"
+date = "2022_04_12_11_56_20"
 
 # model = CNN().to(device)
 model = ResNet.generate_model(10).to(device)
