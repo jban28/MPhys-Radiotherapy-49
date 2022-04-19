@@ -34,16 +34,17 @@ subfolder = "crop_2022_03_29-16_08_02"
 check_day = 1000
 epochs = 50
 batch_size = 4
-learning_rate = 0.001
+learning_rate = 0.00001
 metadata = load_metadata(project_folder, subfolder)
 patient_outcomes = outcomes(metadata, check_day)
-positives, negatives = patient_outcomes.lr_dm_binary()
+positives, negatives = patient_outcomes.lr_binary()
 # model = CNN().to(device)
 model = ResNet.generate_model(10).to(device)
 # loss_fn = nn.BCEWithLogitsLoss(torch.tensor([(len(positives)/len(negatives)), 
 # 1])).to(device)
 loss_fn = nn.BCEWithLogitsLoss().to(device)
-optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
+##optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
+optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 scheduler = ReduceLROnPlateau(optimizer, 'min', patience = 5)
 #===============================================================================
 
