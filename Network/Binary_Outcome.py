@@ -43,7 +43,7 @@ model = ResNet.generate_model(10).to(device)
 # loss_fn = nn.BCEWithLogitsLoss(torch.tensor([(len(positives)/len(negatives)), 
 # 1])).to(device)
 loss_fn = nn.BCEWithLogitsLoss().to(device)
-##optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
+# optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 scheduler = ReduceLROnPlateau(optimizer, 'min', patience = 5)
 #===============================================================================

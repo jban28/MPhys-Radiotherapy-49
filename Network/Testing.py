@@ -48,7 +48,7 @@ if not os.path.exists(f"test_runs/{date}"):
 # Open the metadata.csv file, convert to an array, and remove column headers
 metadata_file = open(project_folder + "/metadata.csv")
 metadata = np.loadtxt(metadata_file, dtype="str", delimiter=",")
-metadata = metadata[1:30][:]
+metadata = metadata[1:][:]
 
 # Find the size of the images being read in
 image_sitk = sitk.ReadImage(project_folder + "/" + subfolder + "/Images/" + 
