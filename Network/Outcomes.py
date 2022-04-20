@@ -7,22 +7,18 @@ class outcomes():
     # data_array form: [patient, check day, LR, DM, death]
     self.check_day = check_day
     self.censoring = censoring
-
-  def censor(self, array):
-    new_array = []
-    for patient in array:
-      if (int(patient[1]) < self.check_day):
-        continue
-      else:
-        new_array.append(patient)
-    return new_array
+    self.metadata = data_array
+    if self.censoring == True:
+      self.name = "Censored"
+    else:
+      self.name = "Uncensored"
 
   def lr_binary(self):
     positives = []
     negatives = []
     for patient in self.metadata:
-      if (patient[2] == "") and self.censoring and (int(patient[1]) < 
-      self.check_day):
+      if ((patient[2] == "") and self.censoring and (int(patient[1]) < 
+      self.check_day)):
         continue 
       elif (patient[2] == "") or (int(patient[2]) > self.check_day):
         negatives.append([patient[0], 0])
