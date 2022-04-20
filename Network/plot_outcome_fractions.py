@@ -2,9 +2,7 @@ from Outcomes import outcomes
 import numpy as np
 import matplotlib.pyplot as plt
 
-project_folder = "/data/James_Anna"
-
-metadata_file = open(project_folder + "/metadata.csv")
+metadata_file = open("metadata.csv")
 metadata = np.loadtxt(metadata_file, dtype="str", delimiter=",")
 metadata = metadata[1:][:]
 new_metadata = []
@@ -25,25 +23,36 @@ day = 1
 while day <= max_follow_up_day:
   outcome = outcomes(new_metadata, day, True)
   days.append(day)
-  total_patients.append(len(outcome.metadata))
 
   positives, negatives = outcome.lr_binary()
   pos_fractions_lr.append(len(positives)/len(outcome.metadata))
   pos_lr.append(len(positives))
 
-  positives, negatives = outcome.dm_binary()
-  pos_fractions_dm.append(len(positives)/len(outcome.metadata))
-  pos_dm.append(len(positives))
+  total_patients.append(len(positives) + len(negatives))
 
-  positives, negatives = outcome.lr_dm_binary()
-  pos_fractions_lr_dm.append(len(positives)/len(outcome.metadata))
-  pos_lr_dm.append(len(positives))
+  # positives, negatives = outcome.dm_binary()
+  # pos_fractions_dm.append(len(positives)/len(outcome.metadata))
+  # pos_dm.append(len(positives))
+
+  # positives, negatives = outcome.lr_dm_binary()
+  # pos_fractions_lr_dm.append(len(positives)/len(outcome.metadata))
+  # pos_lr_dm.append(len(positives))
   day += 1
 
 plt.rcParams['font.family'] = "serif"
-
+"""
 fig, ax1 = plt.subplots()
+ax1.set_xlabel('Day')
+ax1.set_ylabel('Patients with positive outcome', color="red")
+ax1.plot(days, pos_lr, color="red", linestyle='--', label='Patients with locoregional recurrence')
+ax1.tick_params(axis='y', labelcolor="red")
 
+ax2 = ax1.twinx()
+ax2.set_ylabel('Patients remaining in study', color="blue") 
+ax2.plot(days, total_patients, color="blue", label='Total patients remaining')
+ax2.tick_params(axis='y', labelcolor="blue")
+plt.savefig('Outcomes1.png')
+"""
 """
 color = 'tab:red'
 ax1.set_xlabel('Day')
@@ -70,9 +79,9 @@ plt.savefig('Outcomes.pdf', dpi=300)
 
 plt.plot(total_patients, color="blue", label="Total")
 plt.plot(pos_lr,linestyle="dashed", color="red", label="Locoregional recurrence")
-plt.plot(pos_dm, linestyle="dotted", color="red", label="Distant metastasis")
+# plt.plot(pos_dm, linestyle="dotted", color="red", label="Distant metastasis")
 plt.xlabel("Day")
 plt.ylabel("Number of patients remaining in study")
-plt.yscale("log")
+# plt.yscale("log")
 plt.legend(loc=1)
-plt.savefig('Outcomes.png')
+plt.savefig('Outcomes.pdf')

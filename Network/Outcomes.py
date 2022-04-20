@@ -19,11 +19,13 @@ class outcomes():
     for patient in self.metadata:
       if ((patient[2] == "") and self.censoring and (int(patient[1]) < 
       self.check_day)):
-        continue 
+        continue
       elif (patient[2] == "") or (int(patient[2]) > self.check_day):
         negatives.append([patient[0], 0])
       elif (int(patient[2]) <= self.check_day):
         positives.append([patient[0], 1])
+      else:
+        continue
     self.name += ", binary locoregional recurrence"
     return positives, negatives
   
@@ -38,10 +40,13 @@ class outcomes():
         negatives.append([patient[0], 0])
       elif (int(patient[3]) <= self.check_day):
         positives.append([patient[0], 1])
+      else:
+        continue
     self.name += ", binary distant metastasis"
     return positives, negatives
 
   def lr_dm_binary(self):
+    # need to check this works correctly with censorship
     positives = []
     negatives = []
     for patient in self.metadata:
