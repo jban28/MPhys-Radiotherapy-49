@@ -17,29 +17,34 @@ total_patients = []
 pos_fractions_lr = []
 pos_fractions_dm = []
 pos_fractions_lr_dm = []
+pos_lr = []
+pos_dm = []
+pos_lr_dm = []
 days = []
 day = 1
 while day <= max_follow_up_day:
-  outcome = outcomes(new_metadata, day, False)
+  outcome = outcomes(new_metadata, day, True)
   days.append(day)
   total_patients.append(len(outcome.metadata))
 
   positives, negatives = outcome.lr_binary()
-  # pos_fractions_lr.append(len(positives)/len(outcome.metadata))
-  pos_fractions_lr.append(len(positives))
+  pos_fractions_lr.append(len(positives)/len(outcome.metadata))
+  pos_lr.append(len(positives))
 
   positives, negatives = outcome.dm_binary()
-  # pos_fractions_dm.append(len(positives)/len(outcome.metadata))
-  pos_fractions_dm.append(len(positives))
+  pos_fractions_dm.append(len(positives)/len(outcome.metadata))
+  pos_dm.append(len(positives))
 
   positives, negatives = outcome.lr_dm_binary()
-  # pos_fractions_lr_dm.append(len(positives)/len(outcome.metadata))
-  pos_fractions_lr_dm.append(len(positives))
+  pos_fractions_lr_dm.append(len(positives)/len(outcome.metadata))
+  pos_lr_dm.append(len(positives))
   day += 1
 
+plt.rcParams['font.family'] = "serif"
 
 fig, ax1 = plt.subplots()
 
+"""
 color = 'tab:red'
 ax1.set_xlabel('Day')
 ax1.set_ylabel('Patients with positive outcome', color=color)
@@ -58,4 +63,16 @@ ax2.tick_params(axis='y', labelcolor=color)
 
 fig.tight_layout()  # otherwise the right y-label is slightly clipped
 plt.show()
-plt.savefig('Outcomes.png', dpi=300)
+plt.savefig('Outcomes.pdf', dpi=300)
+"""
+
+
+
+plt.plot(total_patients, color="blue", label="Total")
+plt.plot(pos_lr,linestyle="dashed", color="red", label="Locoregional recurrence")
+plt.plot(pos_dm, linestyle="dotted", color="red", label="Distant metastasis")
+plt.xlabel("Day")
+plt.ylabel("Number of patients remaining in study")
+plt.yscale("log")
+plt.legend(loc=1)
+plt.savefig('Outcomes.pdf')
