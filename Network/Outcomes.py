@@ -6,12 +6,7 @@ class outcomes():
   def __init__(self, data_array, check_day=100, censoring=True):
     # data_array form: [patient, check day, LR, DM, death]
     self.check_day = check_day
-    if censoring == True:
-      self.metadata = self.censor(data_array)
-      self.name = "Censored"
-    else:
-      self.metadata = data_array
-      self.name = "Uncensored"
+    self.censoring = censoring
 
   def censor(self, array):
     new_array = []
@@ -26,9 +21,12 @@ class outcomes():
     positives = []
     negatives = []
     for patient in self.metadata:
-      if (patient[2] == "") or (int(patient[2]) > self.check_day):
+      if (patient[2] == "") and self.censoring and (int(patient[1]) < 
+      self.check_day):
+        continue 
+      elif (patient[2] == "") or (int(patient[2]) > self.check_day):
         negatives.append([patient[0], 0])
-      elif (int(patient[2]) < self.check_day):
+      elif (int(patient[2]) <= self.check_day):
         positives.append([patient[0], 1])
     self.name += ", binary locoregional recurrence"
     return positives, negatives
@@ -37,9 +35,12 @@ class outcomes():
     positives = []
     negatives = []
     for patient in self.metadata:
-      if (patient[3] == "") or (int(patient[3]) > self.check_day):
+      if (patient[3] == "") and self.censoring and (int(patient[1]) < 
+      self.check_day):
+        continue 
+      elif (patient[3] == "") or (int(patient[3]) > self.check_day):
         negatives.append([patient[0], 0])
-      elif (int(patient[3]) < self.check_day):
+      elif (int(patient[3]) <= self.check_day):
         positives.append([patient[0], 1])
     self.name += ", binary distant metastasis"
     return positives, negatives
@@ -48,6 +49,9 @@ class outcomes():
     positives = []
     negatives = []
     for patient in self.metadata:
+      if ((patient[2] == "") and (patient[3] == "") and self.censoring and 
+      (int(patient[1]) < self.check_day)):
+        continue 
       if (patient[2] == "") and (patient[3] == ""):
         negatives.append([patient[0], 0])
       elif (patient[2] == "") and (patient[3] != ""):
