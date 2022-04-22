@@ -35,8 +35,8 @@ class ImageDataset(Dataset):
     if self.target_transform:
       label = self.target_transform(label)
 
-    if self.shifts and random.random()<0.5:
-      mx_x, mx_yz = 10, 10
+    if self.shifts:# and random.random()<0.5:
+      mx_x, mx_yz = 100, 100
       # find shift values
       cc_shift, ap_shift, lr_shift = (random.randint(-mx_x,mx_x), 
       random.randint(-mx_yz,mx_yz), random.randint(-mx_yz,mx_yz))
@@ -50,21 +50,21 @@ class ImageDataset(Dataset):
       mx_yz+ap_shift:self.cube_size+mx_yz+ap_shift, mx_yz+
       lr_shift:self.cube_size+mx_yz+lr_shift]
 
-    if self.rotations and random.random()<0.5:
+    if self.rotations:# and random.random()<0.5:
       # taking implementation from my 3DSegmentationNetwork which can be applied
       #  -> rotations in the axial plane only I should think? -10->10 degrees?
       # make -10,10
-      roll_angle = np.clip(np.random.normal(loc=0,scale=3), -10, 10) 
+      roll_angle = 50#np.clip(np.random.normal(loc=0,scale=3), -10, 10) 
       # (1,2) originally
       image = self.rotation(image, roll_angle, rotation_plane=(1,2)) 
         
-    if self.scaling and random.random()<0.5:
+    if self.scaling:# and random.random()<0.5:
       # same here -> zoom between 80-120%
       # original scale = 0.05
-      scale_factor = np.clip(np.random.normal(loc=1.0,scale=0.5), 0.8, 1.2)
+      scale_factor = 0.5#np.clip(np.random.normal(loc=1.0,scale=0.5), 0.8, 1.2)
       image = self.scale(image, scale_factor)
         
-    if self.flips and random.random()<0.5:
+    if self.flips:# and random.random()<0.5:
       image = self.flip(image)
     
     if self.transform:

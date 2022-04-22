@@ -3,6 +3,7 @@ from Outcomes import load_metadata
 from ImageDataset import ImageDataset
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
+import numpy as np
 
 project_folder = "/data/James_Anna"
 subfolder = "crop_2022_03_29-16_08_02"
@@ -18,47 +19,80 @@ image_dimension = image.shape[0]
 print(metadata[0][0])
 patient_to_load = [[metadata[0][0], 1]]
 
+print(image_dimension)
+
+
+index = 0
+
 # original
-data = ImageDataset(patient_to_load, project_folder + "/" + subfolder + 
+dataset = ImageDataset(patient_to_load, project_folder + "/" + subfolder + 
 "/Images/", rotate_augment=False, scale_augment=False, flip_augment=False, 
 shift_augment=False, cube_size=image_dimension)
-dataloader = DataLoader(data, 1, shuffle=False)
-for (X,y, patient) in dataloader:
-  plt.imshow(X[0,:,102,:], cmap='gray')
-  plt.savefig("Augmentations/original.png")
+
+print(dataset[index][0].numpy())
+
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+array = dataset[index][0].numpy()
+x,y,z = np.where(array > 0)
+ax.scatter(x, y, z, c=z, alpha=1)
+ax.set_xlim(0,204)
+ax.set_ylim(0,204)
+ax.set_zlim(0,204)
+plt.savefig("Augmentations/original.png")
 
 # Rotate
-data = ImageDataset(patient_to_load, project_folder + "/" + subfolder + 
+dataset = ImageDataset(patient_to_load, project_folder + "/" + subfolder + 
 "/Images/", rotate_augment=True, scale_augment=False, flip_augment=False, 
 shift_augment=False, cube_size=image_dimension)
-dataloader = DataLoader(data, 1, shuffle=False)
-for (X,y, patient) in dataloader:
-  plt.imshow(X[0,:,102,:], cmap='gray')
-  plt.savefig("Augmentations/rotate.png")
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+array = dataset[index][0].numpy()
+x,y,z = np.where(array > 0)
+ax.scatter(x, y, z, c=z, alpha=1)
+ax.set_xlim(0,204)
+ax.set_ylim(0,204)
+ax.set_zlim(0,204)
+plt.savefig("Augmentations/rotate.png")
 
 # Scale
-data = ImageDataset(patient_to_load, project_folder + "/" + subfolder + 
+dataset = ImageDataset(patient_to_load, project_folder + "/" + subfolder + 
 "/Images/", rotate_augment=False, scale_augment=True, flip_augment=False, 
 shift_augment=False, cube_size=image_dimension)
-dataloader = DataLoader(data, 1, shuffle=False)
-for (X,y, patient) in dataloader:
-  plt.imshow(X[0,:,102,:], cmap='gray')
-  plt.savefig("Augmentations/scale.png")
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+array = dataset[index][0].numpy()
+x,y,z = np.where(array > 0)
+ax.scatter(x, y, z, c=z, alpha=1)
+ax.set_xlim(0,204)
+ax.set_ylim(0,204)
+ax.set_zlim(0,204)
+plt.savefig("Augmentations/scale.png")
 
 # Flip
-data = ImageDataset(patient_to_load, project_folder + "/" + subfolder + 
+dataset = ImageDataset(patient_to_load, project_folder + "/" + subfolder + 
 "/Images/", rotate_augment=False, scale_augment=False, flip_augment=True, 
 shift_augment=False, cube_size=image_dimension)
-dataloader = DataLoader(data, 1, shuffle=False)
-for (X,y, patient) in dataloader:
-  plt.imshow(X[0,:,102,:], cmap='gray')
-  plt.savefig("Augmentations/flip.png")
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+array = dataset[index][0].numpy()
+x,y,z = np.where(array > 0)
+ax.scatter(x, y, z, c=z, alpha=1)
+ax.set_xlim(0,204)
+ax.set_ylim(0,204)
+ax.set_zlim(0,204)
+plt.savefig("Augmentations/flip.png")
 
 # shift
-data = ImageDataset(patient_to_load, project_folder + "/" + subfolder + 
+dataset = ImageDataset(patient_to_load, project_folder + "/" + subfolder + 
 "/Images/", rotate_augment=False, scale_augment=False, flip_augment=False, 
 shift_augment=True, cube_size=image_dimension)
-dataloader = DataLoader(data, 1, shuffle=False)
-for (X,y, patient) in dataloader:
-  plt.imshow(X[0,:,102,:], cmap='gray')
-  plt.savefig("Augmentations/shift.png")
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+array = dataset[index][0].numpy()
+x,y,z = np.where(array > 0)
+ax.scatter(x, y, z, c=z, alpha=1)
+ax.set_xlim(0,204)
+ax.set_ylim(0,204)
+ax.set_zlim(0,204)
+plt.savefig("Augmentations/shift.png")
