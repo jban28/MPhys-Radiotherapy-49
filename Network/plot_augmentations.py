@@ -5,6 +5,8 @@ from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 import numpy as np
 
+plt.rcParams['font.family'] = "serif"
+
 project_folder = "/data/James_Anna"
 subfolder = "crop_2022_03_29-16_08_02"
 
@@ -39,7 +41,7 @@ ax.scatter(x, y, z, c=z, alpha=1)
 ax.set_xlim(0,204)
 ax.set_ylim(0,204)
 ax.set_zlim(0,204)
-plt.savefig("Augmentations/original.png")
+plt.savefig("Augmentations/original.png",bbox_inches='tight')
 
 # Rotate
 dataset = ImageDataset(patient_to_load, project_folder + "/" + subfolder + 
@@ -53,7 +55,7 @@ ax.scatter(x, y, z, c=z, alpha=1)
 ax.set_xlim(0,204)
 ax.set_ylim(0,204)
 ax.set_zlim(0,204)
-plt.savefig("Augmentations/rotate.png")
+plt.savefig("Augmentations/rotate.png",bbox_inches='tight')
 
 # Scale
 dataset = ImageDataset(patient_to_load, project_folder + "/" + subfolder + 
@@ -67,7 +69,7 @@ ax.scatter(x, y, z, c=z, alpha=1)
 ax.set_xlim(0,204)
 ax.set_ylim(0,204)
 ax.set_zlim(0,204)
-plt.savefig("Augmentations/scale.png")
+plt.savefig("Augmentations/scale.png",bbox_inches='tight')
 
 # Flip
 dataset = ImageDataset(patient_to_load, project_folder + "/" + subfolder + 
@@ -81,7 +83,7 @@ ax.scatter(x, y, z, c=z, alpha=1)
 ax.set_xlim(0,204)
 ax.set_ylim(0,204)
 ax.set_zlim(0,204)
-plt.savefig("Augmentations/flip.png")
+plt.savefig("Augmentations/flip.png", bbox_inches='tight')
 
 # shift
 dataset = ImageDataset(patient_to_load, project_folder + "/" + subfolder + 
@@ -95,4 +97,4 @@ ax.scatter(x, y, z, c=z, alpha=1)
 ax.set_xlim(0,204)
 ax.set_ylim(0,204)
 ax.set_zlim(0,204)
-plt.savefig("Augmentations/shift.png")
+plt.savefig("Augmentations/shift.png", bbox_inches='tight')
