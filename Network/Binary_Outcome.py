@@ -51,7 +51,12 @@ scheduler = ReduceLROnPlateau(optimizer, 'min', patience = 5)
 # Split outcomes into train, validation and test
 tr_pos, val_pos, test_pos = split(outcome_list=positives, train_ratio=0.7)
 tr_neg, val_neg, test_neg = split(outcome_list=negatives, train_ratio=0.7)
-
+print(len(tr_pos))
+print(len(tr_neg))
+print(len(val_pos))
+print(len(val_neg))
+print(len(test_pos))
+print(len(test_neg))
 # Construct outcome variables
 train_outcomes = tr_pos + tr_neg
 #print('train outcomes')
