@@ -1,0 +1,2 @@
+Date/time,Info,Accuracy,Sensitivity,Precision,F1 measure,True positive,True negative,False positive,False negative,Specificity,G mean
+2022_04_20_17_42_03,using validation and testing sets,0.8548387096774194,0,0,0,0,53,1,8,0.9814814814814815,0.0

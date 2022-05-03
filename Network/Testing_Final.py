@@ -22,7 +22,7 @@ info = input("Add testing notes")
 #===============================================================================
 # Set-up
 #===============================================================================
-project_folder = "/data/James_Anna"
+project_folder = "/mnt/f/MPhys"
 subfolder = "crop_2022_03_29-16_08_02"
 date = "2022_04_20_17_42_03"
 
@@ -32,7 +32,7 @@ check_day = 1000
 #===============================================================================
 
 # Load model state for testing
-model.load_state_dict(torch.load(f'models/{date}'))
+model.load_state_dict(torch.load(f'models/{date}', map_location=torch.device('cpu')))
 
 # Create file for test results if one does not exist
 if not os.path.exists(f"test_runs_{date}"):
