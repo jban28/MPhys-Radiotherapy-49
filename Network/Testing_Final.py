@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import SimpleITK as sitk
 
 from Results import Results
-from Outcomes import outcomes, load_metadata
+from Outcomes import outcomes, load_metadata, split
 from Networks import CNN, ResNet
 from Network_Loops import test_loop
 from Tensorboard import customWriter
@@ -18,6 +18,7 @@ from medcam import medcam
 
 device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
+info = input("Add testing notes")
 #===============================================================================
 # Set-up
 #===============================================================================
@@ -34,8 +35,8 @@ check_day = 1000
 model.load_state_dict(torch.load(f'models/{date}'))
 
 # Create file for test results if one does not exist
-if not os.path.exists(f"test_runs_full/{date}"):
-    os.mkdir(f"test_runs_full/{date}")
+if not os.path.exists(f"test_runs_{date}"):
+    os.mkdir(f"test_runs_{date}")
 
 # Find the original metadata for the patients 
 # Open the metadata.csv file, convert to an array, and remove column headers
@@ -52,8 +53,17 @@ patient_outcomes = outcomes(metadata, check_day)
 positives, negatives = patient_outcomes.lr_binary()
 test_outcomes = positives + negatives
 
+tr_pos, val_pos, test_pos = split(outcome_list=positives, train_ratio=0.7)
+tr_neg, val_neg, test_neg = split(outcome_list=negatives, train_ratio=0.7)
+
+train_outcomes = tr_pos + tr_neg
+validation_outcomes = val_pos + val_neg
+test_outcomes = test_pos + test_neg
+
+final_test_outcomes = test_outcomes + validation_outcomes
+
 # Create dataset and dataloader
-test_data = ImageDataset(test_outcomes, project_folder + "/" + subfolder + 
+test_data = ImageDataset(final_test_outcomes, project_folder + "/" + subfolder + 
 "/Images/", rotate_augment=False, scale_augment=False, flip_augment=False, 
 shift_augment=False, cube_size=image_dimension)
 test_dataloader = DataLoader(test_data, 1, shuffle=False)
@@ -77,20 +87,20 @@ specificity = test_results.specificity
 G_mean = test_results.G_mean
 
 # Append test results to csv
-if os.path.isfile('test_runs_full/Results.csv'):
+if os.path.isfile('test_runs_Results.csv'):
     # Append row
-    with open('test_runs_full/Results.csv', 'a', newline='') as csvfile:
+    with open('test_runs_Results.csv', 'a', newline='') as csvfile:
         filewriter = csv.writer(csvfile, delimiter=',')
         filewriter.writerow([date, accuracy, sensitivity, precision, F1_measure,
         tp, tn, fp, fn, specificity, G_mean])
 else:
     # Create and then add row
-    with open('test_runs_full/Results.csv', 'w', newline='') as csvfile:
+    with open('test_runs_Results.csv', 'w', newline='') as csvfile:
         filewriter = csv.writer(csvfile, delimiter=',')
-        filewriter.writerow(['Date/time', 'Accuracy', 'Sensitivity','Precision',
-        'F1 measure', 'True positive', 'True negative', 'False positive', 
-        'False negative', 'Specificity', 'G mean'])
-        filewriter.writerow([date, accuracy, sensitivity, precision, F1_measure,
+        filewriter.writerow(['Date/time', 'Info', 'Accuracy', 'Sensitivity',
+        'Precision', 'F1 measure', 'True positive', 'True negative', 
+        'False positive', 'False negative', 'Specificity', 'G mean'])
+        filewriter.writerow([date, info, accuracy, sensitivity, precision, F1_measure,
         tp, tn, fp, fn, specificity, G_mean])
 
 # Save medcam images for each layer
@@ -116,4 +126,4 @@ for layer in layer_names:
     # print(attn.max(), attn.min())
     ax.imshow(im, cmap='gray')
     ax.imshow(attn, cmap='jet', alpha=0.5)
-    fig.savefig(f'test_runs_full/{date}/{layer}.png')
+    fig.savefig(f'test_runs_{date}/{layer}.png')

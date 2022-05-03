@@ -23,7 +23,6 @@ patient_to_load = [[metadata[0][0], 1]]
 
 print(image_dimension)
 
-
 index = 0
 
 # original

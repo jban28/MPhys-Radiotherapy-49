@@ -35,7 +35,7 @@ class ImageDataset(Dataset):
     if self.target_transform:
       label = self.target_transform(label)
 
-    if self.shifts: and random.random()<0.5:
+    if self.shifts and random.random()<0.5:
       mx_x, mx_yz = 10, 10
       # find shift values
       cc_shift, ap_shift, lr_shift = (random.randint(-mx_x,mx_x), 
