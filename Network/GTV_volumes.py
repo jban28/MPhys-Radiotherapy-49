@@ -1,9 +1,11 @@
+from unittest.loader import VALID_MODULE_NAME
 from Outcomes import outcomes, split, load_metadata
 import SimpleITK as sitk
 from ImageDataset import ImageDataset
 import numpy as np
 import matplotlib.pyplot as plt
-
+from scipy import stats
+"""
 project_folder = "/mnt/f/MPhys"
 subfolder = "crop_2022_03_01-12_00_12"
 check_day = 1000
@@ -39,7 +41,7 @@ flip_augment=False, shift_augment=False, cube_size=image_dimension)
 training_gtv_vols = []
 validation_gtv_vols = []
 testing_gtv_vols = []
-"""
+
 for patient in training_data:
   array = patient[0].numpy()
   training_gtv_vols.append(np.count_nonzero(array))
@@ -78,22 +80,37 @@ validation_gtv_vols = [23383, 25849, 4829, 28348, 32323, 12910, 48128, 14575,
  47870, 38587, 8528, 123819, 19957, 2935, 34624, 10601, 1844, 28343, 25838]
 testing_gtv_vols = [491, 19408, 37386, 8077, 36297, 61997, 26514, 7251, 4311, 
 22370, 19431, 48309, 19154, 20881, 17215, 32115, 9310, 7826, 36079, 4787, 32002,
- 21120, 5114, 28114, 25086, 17928, 26774, 34087, 34383, 55497, 35377]
+21120, 5114, 28114, 25086, 17928, 26774, 34087, 34383, 55497, 35377]
+
+for i in range(0,len(training_gtv_vols)):
+  training_gtv_vols[i] /= 1000
+
+for i in range(0,len(validation_gtv_vols)):
+  validation_gtv_vols[i] /= 1000
+
+for i in range(0, len(testing_gtv_vols)):
+  testing_gtv_vols[i] /= 1000
+
+max = np.max(training_gtv_vols + validation_gtv_vols + testing_gtv_vols)
+hist_bins = 30
+hist_range = (0, max)
+
+print(stats.kruskal(training_gtv_vols, validation_gtv_vols, testing_gtv_vols))
 
 plt.rcParams['font.family'] = "serif"
-plt.hist(training_gtv_vols, bins=30)
-plt.xlabel("Tumour volume", )
-plt.ylabel("Number of patients")
-plt.savefig("train_hist.png")
+plt.rcParams['font.size'] = 20
+plt.rcParams['figure.figsize'] = (7,7)
 
-plt.rcParams['font.family'] = "serif"
-plt.hist(validation_gtv_vols, bins=10)
-plt.xlabel("Tumour volume", )
+plt.xlabel("Tumour volume (mm$^3$)", )
 plt.ylabel("Number of patients")
-plt.savefig("val_hist.png")
 
-plt.rcParams['font.family'] = "serif"
-plt.hist(testing_gtv_vols, bins=30)
-plt.xlabel("Tumour volume", )
-plt.ylabel("Number of patients")
-plt.savefig("test_hist.png")
+#plt.hist(training_gtv_vols, bins=hist_bins, range=hist_range)
+#plt.savefig("train_hist.pdf")
+
+#plt.hist(validation_gtv_vols, bins=hist_bins, range=hist_range)
+#plt.yticks(ticks=(0,1,2,3,4))
+#plt.savefig("val_hist.pdf")
+
+plt.hist(testing_gtv_vols, bins=hist_bins, range=hist_range)
+plt.yticks(ticks=(0,1,2,3,4,5,6))
+plt.savefig("test_hist.pdf")
